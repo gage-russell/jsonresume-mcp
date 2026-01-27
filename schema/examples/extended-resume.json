@@ -1,0 +1,144 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Jane Doe",
+    "label": "Senior Software Engineer",
+    "email": "jane@example.com",
+    "phone": "(555) 123-4567",
+    "url": "https://janedoe.com",
+    "summary": "Senior software engineer with 8 years of experience building scalable systems.",
+    "location": {
+      "city": "San Francisco",
+      "countryCode": "US",
+      "region": "California"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "janedoe",
+        "url": "https://linkedin.com/in/janedoe"
+      },
+      {
+        "network": "GitHub",
+        "username": "janedoe",
+        "url": "https://github.com/janedoe"
+      }
+    ]
+  },
+  
+  "work": [
+    {
+      "name": "Tech Corp",
+      "position": "Senior Software Engineer",
+      "url": "https://techcorp.com",
+      "startDate": "2020-01-01",
+      "endDate": "2024-01-01",
+      "summary": "Led backend engineering team building microservices architecture",
+      "highlights": [
+        "Migrated monolith to microservices, improving performance by 40%",
+        "Led team of 5 engineers in delivering critical features",
+        "Implemented CI/CD pipeline reducing deployment time by 60%"
+      ],
+      
+      "x-id": "work-techcorp-2020",
+      "x-tags": ["python", "aws", "microservices", "leadership", "backend"],
+      "x-projectDetails": [
+        {
+          "id": "proj-migration",
+          "name": "Microservices Migration",
+          "summary": "Led the migration of a monolithic application to microservices architecture serving 10M users",
+          "technologies": ["Python", "FastAPI", "AWS ECS", "Docker", "PostgreSQL", "Redis"],
+          "challenges": "Legacy codebase with tight coupling, zero-downtime requirement, complex data dependencies between services",
+          "outcomes": "Successfully migrated 15 services, improved response times by 40%, reduced deployment time from 2 hours to 15 minutes, zero production incidents during migration",
+          "teamContext": "Led team of 5 engineers, collaborated with 3 product teams, mentored 2 junior developers",
+          "tags": ["migration", "architecture", "leadership", "performance"]
+        },
+        {
+          "id": "proj-cicd",
+          "name": "CI/CD Pipeline Implementation",
+          "summary": "Built automated CI/CD pipeline for 20+ microservices",
+          "technologies": ["GitHub Actions", "AWS CodePipeline", "Docker", "Terraform"],
+          "challenges": "Manual deployment process taking 2 hours, no automated testing, frequent deployment failures",
+          "outcomes": "Reduced deployment time by 60%, achieved 99.9% deployment success rate, enabled daily deployments",
+          "teamContext": "Solo project with guidance from DevOps team",
+          "tags": ["devops", "automation", "cicd"]
+        }
+      ],
+      "x-bullets": [
+        {
+          "id": "bullet-migration",
+          "text": "Migrated monolith to microservices, improving performance by 40%",
+          "tags": ["migration", "architecture", "performance", "leadership"],
+          "linkedHighlight": 0
+        },
+        {
+          "id": "bullet-leadership",
+          "text": "Led team of 5 engineers in delivering critical features",
+          "tags": ["leadership", "management", "mentoring"],
+          "linkedHighlight": 1
+        },
+        {
+          "id": "bullet-cicd",
+          "text": "Implemented CI/CD pipeline reducing deployment time by 60%",
+          "tags": ["devops", "automation", "cicd"],
+          "linkedHighlight": 2
+        }
+      ]
+    }
+  ],
+  
+  "education": [
+    {
+      "institution": "University of California",
+      "url": "https://berkeley.edu",
+      "area": "Computer Science",
+      "studyType": "Bachelor",
+      "startDate": "2012-09-01",
+      "endDate": "2016-06-01",
+      "score": "3.8",
+      
+      "x-id": "edu-ucb",
+      "x-tags": ["computer-science", "algorithms", "systems"]
+    }
+  ],
+  
+  "skills": [
+    {
+      "name": "Backend Development",
+      "level": "Master",
+      "keywords": ["Python", "FastAPI", "Django", "PostgreSQL", "Redis"],
+      
+      "x-id": "skill-backend",
+      "x-category": "Technical Skills",
+      "x-tags": ["backend", "api", "databases"],
+      "x-yearsOfExperience": 8
+    },
+    {
+      "name": "Cloud Platforms",
+      "level": "Advanced",
+      "keywords": ["AWS", "Docker", "Kubernetes", "Terraform"],
+      
+      "x-id": "skill-cloud",
+      "x-category": "Cloud & DevOps",
+      "x-tags": ["cloud", "devops", "infrastructure"],
+      "x-yearsOfExperience": 6
+    }
+  ],
+  
+  "projects": [
+    {
+      "name": "Open Source Contributor",
+      "description": "Active contributor to FastAPI and other Python projects",
+      "highlights": [
+        "Contributed 15+ PRs to FastAPI core",
+        "Maintainer of popular Python library with 5k+ stars"
+      ],
+      "startDate": "2019-01-01",
+      "url": "https://github.com/janedoe",
+      
+      "x-id": "proj-opensource",
+      "x-tags": ["opensource", "python", "community"],
+      "x-technologies": ["Python", "FastAPI", "Pydantic"]
+    }
+  ]
+}

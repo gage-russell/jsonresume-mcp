@@ -1,0 +1,17 @@
+{
+	"servers": {
+		"resumejson_mcp": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+                "--directory",
+                "/Users/gagerussell/github/resumejson-mcp",
+                "run",
+                "python",
+                "-m",
+                "resumejson_mcp.mcp_server"
+			]
+		}
+	},
+	"inputs": []
+}

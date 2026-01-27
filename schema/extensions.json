@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gagerussell/resumejson-mcp/schema/extensions.json",
+  "title": "JSON Resume MCP Extensions",
+  "description": "MCP (Model Context Protocol) extensions for JSON Resume to support AI-powered resume building and tailoring",
+  "version": "0.1.0",
+  
+  "definitions": {
+    "mcpBullet": {
+      "type": "object",
+      "description": "A tagged accomplishment. AI uses these to generate work.highlights for specific job applications.",
+      "required": ["id", "text"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this bullet"
+        },
+        "text": {
+          "type": "string",
+          "description": "The accomplishment text"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags for matching to job descriptions (skills, domains, achievements)"
+        }
+      }
+    },
+    
+    "mcpMajorProject": {
+      "type": "object",
+      "description": "Rich project context that AI uses to understand accomplishments deeply and generate compelling, tailored bullets.",
+      "required": ["id", "name", "summary"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this project"
+        },
+        "name": {
+          "type": "string",
+          "description": "Project name"
+        },
+        "summary": {
+          "type": "string",
+          "description": "What the project was and your specific role"
+        },
+        "technologies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Technologies, tools, and frameworks used"
+        },
+        "challenges": {
+          "type": "string",
+          "description": "Problems faced and how you solved them"
+        },
+        "outcomes": {
+          "type": "string",
+          "description": "Results, metrics, and measurable impact"
+        },
+        "teamContext": {
+          "type": "string",
+          "description": "Team size, your role, collaboration style"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags for job matching"
+        }
+      }
+    },
+    
+    "mcpDetails": {
+      "type": "object",
+      "description": "MCP data store for a work position. Contains all accomplishments and context. AI generates work.highlights from this when tailoring for jobs.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this position"
+        },
+        "bullets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/mcpBullet" },
+          "description": "All accomplishments at this position with tags. AI filters and selects from these to populate work.highlights."
+        },
+        "majorProjects": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/mcpMajorProject" },
+          "description": "Rich context about major projects. Helps AI understand the depth and generate compelling bullets."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Position-level tags (skills, industries, role types)"
+        }
+      }
+    },
+    
+    "mcpWorkExtensions": {
+      "type": "object",
+      "description": "MCP extensions for work entries",
+      "properties": {
+        "mcp-details": {
+          "$ref": "#/definitions/mcpDetails",
+          "description": "Comprehensive accomplishment data. AI generates work.highlights from this when tailoring resumes."
+        }
+      }
+    },
+    
+    "mcpSkillDetails": {
+      "type": "object",
+      "description": "MCP metadata for a skill entry",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this skill"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags for filtering/matching"
+        }
+      }
+    },
+    
+    "mcpSkillExtensions": {
+      "type": "object",
+      "description": "MCP extensions for skills",
+      "properties": {
+        "mcp-details": {
+          "$ref": "#/definitions/mcpSkillDetails",
+          "description": "MCP metadata for organizing and filtering skills"
+        }
+      }
+    },
+    
+    "mcpProjectDetails": {
+      "type": "object",
+      "description": "MCP metadata for a project entry",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this project"
+        },
+        "oneLiner": {
+          "type": "string",
+          "description": "Brief one-line description for resume"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags for filtering/matching"
+        }
+      }
+    },
+    
+    "mcpProjectExtensions": {
+      "type": "object",
+      "description": "MCP extensions for projects",
+      "properties": {
+        "mcp-details": {
+          "$ref": "#/definitions/mcpProjectDetails",
+          "description": "MCP metadata for project selection and display"
+        }
+      }
+    },
+    
+    "mcpEducationDetails": {
+      "type": "object",
+      "description": "MCP metadata for an education entry",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this education entry"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags for filtering/matching"
+        }
+      }
+    },
+    
+    "mcpEducationExtensions": {
+      "type": "object",
+      "description": "MCP extensions for education entries",
+      "properties": {
+        "mcp-details": {
+          "$ref": "#/definitions/mcpEducationDetails",
+          "description": "MCP metadata for education management"
+        }
+      }
+    }
+  },
+  
+  "properties": {
+    "work": {
+      "type": "array",
+      "description": "Work entries with MCP extensions",
+      "items": {
+        "allOf": [
+          { "$ref": "#/definitions/mcpWorkExtensions" }
+        ]
+      }
+    },
+    
+    "skills": {
+      "type": "array",
+      "description": "Skills with MCP extensions",
+      "items": {
+        "allOf": [
+          { "$ref": "#/definitions/mcpSkillExtensions" }
+        ]
+      }
+    },
+    
+    "education": {
+      "type": "array",
+      "description": "Education entries with MCP extensions",
+      "items": {
+        "allOf": [
+          { "$ref": "#/definitions/mcpEducationExtensions" }
+        ]
+      }
+    },
+    
+    "projects": {
+      "type": "array",
+      "description": "Projects with MCP extensions",
+      "items": {
+        "allOf": [
+          { "$ref": "#/definitions/mcpProjectExtensions" }
+        ]
+      }
+    }
+  }
+}
