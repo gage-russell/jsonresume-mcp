@@ -4,6 +4,7 @@ from fastmcp.tools import tool
 
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
 from resumejson_mcp.lib.experience.models import Skill
+from resumejson_mcp.lib.pending_actions import get_tracker, ActionType
 from .helpers import ensure_skill_ids, format_skill_result, format_bulk_skills_result
 
 
@@ -166,6 +167,7 @@ def add_skills(skills: list[Skill]) -> str:
         ensure_skill_ids(skill)
     
     store = ExperienceStore()
+    tracker = get_tracker()
     
     # Handle ID collisions
     for skill in skills:
@@ -181,7 +183,16 @@ def add_skills(skills: list[Skill]) -> str:
     
     store.add_skills(skills)
     
-    return format_bulk_skills_result(skills)
+    # Auto-complete any pending add_skills actions
+    completed = tracker.complete_actions_of_type(ActionType.ADD_SKILLS)
+    
+    result = format_bulk_skills_result(skills)
+    
+    if completed > 0:
+        result += f"\n\n✓ Auto-completed {completed} pending skill action(s)"
+        result += f"\n{tracker.format_compact()}"
+    
+    return result
 
 
 @tool(

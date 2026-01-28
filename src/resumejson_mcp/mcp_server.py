@@ -8,6 +8,7 @@ from resumejson_mcp.mcp.experience.v1.skills import tools as skill_tools
 from resumejson_mcp.mcp.experience.v1.basics import tools as basics_tools
 from resumejson_mcp.mcp.templates.v1 import tools as template_tools
 from resumejson_mcp.mcp.applications.v1 import tools as application_tools
+from resumejson_mcp.mcp.workflow.v1 import tools as workflow_tools
 
 
 mcp = FastMCP(
@@ -16,7 +17,29 @@ mcp = FastMCP(
         This server provides tools for managing JSON Resume data with MCP extensions
         and generating tailored resumes for job applications.
         
-        FIRST TIME SETUP:
+        ============================================================================
+        ⚠️  CRITICAL: PENDING ACTIONS WORKFLOW
+        ============================================================================
+        
+        This server tracks PENDING ACTIONS that you must complete. After any operation
+        that creates pending actions (e.g., add_work), you will see a summary like:
+        
+            📋 PENDING ACTIONS (DO NOT SKIP):
+            🔴 CRITICAL: Add accomplishment bullets to: Senior Engineer at Acme
+            🟠 HIGH: Add skills: Python, Kubernetes, Kafka (+5 more)
+        
+        YOU MUST:
+        1. Complete all CRITICAL actions before moving on
+        2. Complete HIGH priority actions in the same session
+        3. Use get_pending_todos() to check your pending work
+        4. Use complete_todo(action_id) or complete_todos_of_type(type) to mark done
+        
+        DO NOT ignore pending actions and move on to new requests.
+        
+        ============================================================================
+        FIRST TIME SETUP
+        ============================================================================
+        
         1. Run check_setup_status() to verify configuration
         2. If not configured, run setup_storage() to initialize directories
         3. Run initialize_experience() to create your experience.json file
@@ -42,6 +65,18 @@ mcp = FastMCP(
         3. SAVE AND COMPILE
            → Call save_tailored_resume(application_id, resume_data)
            → Call render_and_compile(application_id) to generate PDF
+        
+        ============================================================================
+        ADDING WORK EXPERIENCE WORKFLOW
+        ============================================================================
+        
+        When adding work with add_work(), the system will automatically:
+        1. Track missing bullets as CRITICAL pending action
+        2. Track missing major projects as CRITICAL pending action
+        3. Extract technologies and track as HIGH priority skill additions
+        4. Detect potential portfolio projects as MEDIUM priority
+        
+        You MUST complete these actions before asking "what's next?"
         
         ============================================================================
         DATA STRUCTURE
@@ -70,17 +105,6 @@ mcp = FastMCP(
         CRITICAL: mcp-details are for STORAGE only. They help the AI understand
         context and generate tailored content. They should NOT appear in the
         final resume.json output.
-        
-        ============================================================================
-        IMPORTANT GUIDELINES
-        ============================================================================
-        
-        - ALWAYS extract and populate bullets and major projects when adding work
-        - INFER accomplishments from user descriptions - don't wait for explicit lists
-        - Ask follow-up questions to gather complete information
-        - Minimum 2-3 bullets and 1-2 major projects per work position
-        - When tailoring: prioritize keywords from the job description
-        - Rewrite bullets to emphasize relevant skills for the target role
     """,
 )
 
@@ -145,6 +169,12 @@ mcp.add_tool(application_tools.list_applications)
 mcp.add_tool(application_tools.get_application)
 mcp.add_tool(application_tools.get_application_resume)
 mcp.add_tool(application_tools.delete_application)
+
+# Workflow tools (pending actions / todos)
+mcp.add_tool(workflow_tools.get_pending_todos)
+mcp.add_tool(workflow_tools.complete_todo)
+mcp.add_tool(workflow_tools.complete_todos_of_type)
+mcp.add_tool(workflow_tools.clear_completed_todos)
 
 
 if __name__ == "__main__":

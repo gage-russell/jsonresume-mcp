@@ -4,6 +4,11 @@ from uuid import uuid4
 
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
 from resumejson_mcp.lib.experience.models import Work, MCPBullet, MCPMajorProject
+from resumejson_mcp.lib.pending_actions import (
+    get_tracker,
+    ActionType,
+    ActionPriority,
+)
 
 
 def ensure_work_ids(work: Work) -> None:
@@ -115,7 +120,7 @@ def detect_missing_info(work: Work) -> list[str]:
 
 
 def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
-    """Format a complete work position result with guidance.
+    """Format a complete work position result with guidance and pending actions.
     
     Args:
         work: The work position to format
@@ -123,8 +128,12 @@ def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
         store: ExperienceStore instance for additional queries
     
     Returns:
-        Formatted output with position details and next steps
+        Formatted output with position details and pending actions
     """
+    tracker = get_tracker()
+    work_id = work.mcp_details.id if work.mcp_details else "unknown"
+    work_name = f"{work.position} at {work.name}"
+    
     # Header
     date_range = f"{work.start_date} - {work.end_date or 'Present'}"
     location_str = f" | {work.location}" if work.location else ""
@@ -138,9 +147,6 @@ def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
 {'=' * 70}
 """
     
-    # Basic info
-    basic_info = ""
-    
     # Summary
     summary_section = ""
     if work.summary:
@@ -148,6 +154,7 @@ def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
     
     # Bullets
     bullets_section = ""
+    has_bullets = work.mcp_details and len(work.mcp_details.bullets) > 0
     if work.mcp_details:
         bullet_count = len(work.mcp_details.bullets)
         bullets_section = f"\n💼 ACCOMPLISHMENTS ({bullet_count}):\n"
@@ -155,131 +162,76 @@ def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
     
     # Major Projects
     projects_section = ""
+    has_projects = work.mcp_details and len(work.mcp_details.major_projects) > 0
     if work.mcp_details:
         project_count = len(work.mcp_details.major_projects)
         projects_section = f"\n\n🚀 MAJOR PROJECTS ({project_count}):\n"
         projects_section += format_major_projects(work.mcp_details.major_projects)
     
-    # Extract technologies
+    # =========================================================================
+    # PENDING ACTIONS - Track what needs to be done
+    # =========================================================================
+    
+    # 1. Check for missing bullets (CRITICAL)
+    if not has_bullets:
+        tracker.add_bullets_action(work_id, work_name)
+    
+    # 2. Check for missing major projects (CRITICAL)
+    if not has_projects:
+        tracker.add_major_project_action(work_id, work_name)
+    
+    # 3. Extract technologies and check for missing skills (HIGH)
     tech_list = extract_technologies(work)
     all_skills = store.get_all_skills()
-    skill_names = {s.name for s in all_skills}
-    missing_skills = [t for t in tech_list if t not in skill_names]
+    
+    # Check against skill keywords, not just skill names (categories)
+    existing_keywords = set()
+    for skill in all_skills:
+        existing_keywords.update(kw.lower() for kw in skill.keywords)
+        if skill.name:
+            existing_keywords.add(skill.name.lower())
+    
+    missing_skills = [t for t in tech_list if t.lower() not in existing_keywords]
     
     tech_section = ""
-    if tech_list and missing_skills:
+    if tech_list:
         tech_section = f"""
 
 ⚙️  TECHNOLOGIES MENTIONED:
-{', '.join(tech_list)}
+{', '.join(tech_list)}"""
+        
+        if missing_skills:
+            # Add to tracker
+            tracker.add_skills_action(missing_skills, work_id, work_name)
+            tech_section += f"""
 
-📌 ACTION REQUIRED - AUTOMATICALLY ADD THESE SKILLS:
-These technologies aren't in your skills yet: {', '.join(missing_skills)}
-CALL add_skills tool NOW to add them automatically.
-Do NOT ask permission - add them immediately after showing this output."""
+📌 SKILLS TO ADD: {', '.join(missing_skills)}"""
     
-    # Missing information
+    # 4. Check for portfolio project candidates (MEDIUM)
+    portfolio_candidates = []
+    if work.mcp_details and work.mcp_details.major_projects:
+        for project in work.mcp_details.major_projects:
+            summary_lower = (project.summary or '').lower()
+            name_lower = (project.name or '').lower()
+            
+            # Indicators this might be a portfolio project
+            indicators = ['github', 'open source', 'published', 'app store', 'side project', 'personal project']
+            if any(keyword in summary_lower or keyword in name_lower for keyword in indicators):
+                portfolio_candidates.append(project.name)
+    
+    if portfolio_candidates:
+        tracker.add_portfolio_project_action(portfolio_candidates, work_id)
+    
+    # Missing information summary
     missing = detect_missing_info(work)
     missing_section = ""
     if missing:
         missing_section = f"""
 
-⚠️  MISSING/INCOMPLETE INFORMATION:
-{chr(10).join(f'  • {m}' for m in missing)}
-
-⚠️  IMPORTANT: Ask targeted follow-up questions to extract this information:
-  → For bullets: "What were your key accomplishments in this role?"
-  → For projects: "What specific projects did you work on? What technologies?"
-  → For outcomes: "What were the results? Any metrics or impact you can quantify?"
-"""
+⚠️  INCOMPLETE:
+{chr(10).join(f'  • {m}' for m in missing)}"""
     
-    # Next steps guidance
-    has_no_bullets = not work.mcp_details or not work.mcp_details.bullets
-    has_no_projects = not work.mcp_details or not work.mcp_details.major_projects
+    # Format pending actions from tracker
+    pending_section = tracker.format_summary()
     
-    next_steps = f"""
-
-🎯 NEXT STEPS (REQUIRED):
-1. Show user the captured information above
-2. Ask: "Does this look correct for your {work.position} role at {work.name}?"
-"""
-    
-    if has_no_bullets or has_no_projects:
-        critical_items = []
-        if has_no_bullets:
-            critical_items.append("bullets/accomplishments")
-        if has_no_projects:
-            critical_items.append("major projects")
-        
-        next_steps += f"""3. ⚠️  CRITICAL: This position is missing {' and '.join(critical_items)}.
-   You MUST ask follow-up questions to extract this information:
-   - "What were your main responsibilities and accomplishments?"
-   - "What specific projects or initiatives did you work on?"
-   - "What technologies, tools, or methodologies did you use?"
-   - "What was the impact or outcome of your work? Any metrics?"
-4. Use add_bullet_to_work and add_major_project_to_work to populate these
-"""
-    elif missing:
-        next_steps += f"""3. Address incomplete information: "{missing[0]}"
-   Ask specific follow-up questions to get the missing details
-4. Update the position once you have more information
-"""
-    else:
-        next_steps += f"""3. ✓ This position looks complete with bullets and projects!
-"""
-    
-    # Reuse missing_skills computed earlier in the function
-    if missing_skills:
-        step_num = 5 if (has_no_bullets or has_no_projects or missing) else 4
-        next_steps += f"""{step_num}. ACTION: Automatically add missing skills using add_skills tool.
-   DO NOT ask permission. Add them immediately: {', '.join(missing_skills[:5])}
-   (Group them by logical categories like Languages, Frameworks, Tools, etc.)
-"""
-    
-    # Check if any major_projects could be portfolio projects
-    portfolio_candidates = []
-    if work.mcp_details and work.mcp_details.major_projects:
-        for project in work.mcp_details.major_projects:
-            # Look for indicators this might be a portfolio project
-            summary_lower = (project.summary or '').lower()
-            name_lower = (project.name or '').lower()
-            
-            # Strong indicators for automatic addition
-            strong_indicators = ['github', 'open source', 'published', 'app store']
-            # Weaker indicators - ask first
-            weak_indicators = ['side project', 'personal project', 'built', 'created']
-            
-            if any(keyword in summary_lower or keyword in name_lower for keyword in strong_indicators):
-                portfolio_candidates.append((project.name, True))  # True = auto-add
-            elif any(keyword in summary_lower for keyword in weak_indicators):
-                portfolio_candidates.append((project.name, False))  # False = ask first
-    
-    current_step = 6 if (has_no_bullets or has_no_projects or missing) else 5
-    if missing_skills:
-        current_step += 1
-    
-    if portfolio_candidates:
-        auto_add = [name for name, should_auto in portfolio_candidates if should_auto]
-        ask_first = [name for name, should_auto in portfolio_candidates if not should_auto]
-        
-        if auto_add:
-            next_steps += f"""{current_step}. ACTION: Automatically add these as top-level portfolio projects using add_project:
-   {', '.join(auto_add)}
-   These contain GitHub/open source/published indicators.
-"""
-            current_step += 1
-        
-        if ask_first:
-            next_steps += f"""{current_step}. Ask: "I noticed {', '.join(ask_first[:2])}. 
-   {'Is this' if len(ask_first) == 1 else 'Are these'} portfolio project(s) you'd like to showcase on your resume?
-   If yes, I'll add {'it' if len(ask_first) == 1 else 'them'} as top-level project(s) using add_project."
-"""
-            current_step += 1
-    
-    next_steps += f"""{current_step}. Once position is complete, ask: "Any other work positions to add?"
-
-💡 REMINDER: work[].major_projects provide context for generating resume bullets.
-   If the user has portfolio projects (GitHub repos, side projects) to showcase,
-   those should be added as top-level projects using add_project."""
-    
-    return header + basic_info + summary_section + bullets_section + projects_section + tech_section + missing_section + next_steps
+    return header + summary_section + bullets_section + projects_section + tech_section + missing_section + "\n\n" + pending_section
