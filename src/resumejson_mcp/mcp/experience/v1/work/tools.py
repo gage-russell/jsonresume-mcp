@@ -6,6 +6,7 @@ from fastmcp.tools import tool
 
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
 from resumejson_mcp.lib.experience.models import Work, MCPBullet, MCPMajorProject
+from resumejson_mcp.lib.pending_actions import get_tracker, ActionType
 from resumejson_mcp.mcp.experience.v1.work.helpers import (
     format_work_result,
     ensure_work_ids,
@@ -204,6 +205,7 @@ Confirm with user: "I've deleted your {work.position} role at {work.name}. Is th
 )
 def add_bullet_to_work(work_id: str, bullet: MCPBullet) -> str:
     store = ExperienceStore()
+    tracker = get_tracker()
     
     try:
         work = store.get_work_by_id(work_id)
@@ -213,15 +215,22 @@ def add_bullet_to_work(work_id: str, bullet: MCPBullet) -> str:
     added = store.add_bullet_to_work(work_id, bullet)
     new_count = len(work.mcp_details.bullets) + 1 if work.mcp_details else 1
     
-    return f"""✓ BULLET ADDED
+    # Auto-complete pending add_bullets action for this work position
+    completed = tracker.complete_actions_of_type(ActionType.ADD_BULLETS, work_id)
+    
+    result = f"""✓ BULLET ADDED
 
 Position: {work.position} at {work.name}
 Added: "{added.text}"
 Total bullets: {new_count}
-
-NEXT STEPS:
-Ask user: "I've added that accomplishment. Any other bullet points for this role?"
 """
+    
+    if completed > 0:
+        result += f"\n✓ Completed pending bullets action"
+    
+    result += f"\n{tracker.format_compact()}"
+    
+    return result
 
 
 @tool(
@@ -250,6 +259,7 @@ Ask user: "I've added that accomplishment. Any other bullet points for this role
 )
 def add_major_project_to_work(work_id: str, project: MCPMajorProject) -> str:
     store = ExperienceStore()
+    tracker = get_tracker()
     
     try:
         work = store.get_work_by_id(work_id)
@@ -261,6 +271,9 @@ def add_major_project_to_work(work_id: str, project: MCPMajorProject) -> str:
     
     tech_list = project.technologies or []
     
+    # Auto-complete pending add_major_project action for this work position
+    completed = tracker.complete_actions_of_type(ActionType.ADD_MAJOR_PROJECT, work_id)
+    
     result = f"""✓ MAJOR PROJECT ADDED
 
 Position: {work.position} at {work.name}
@@ -269,17 +282,26 @@ Technologies: {', '.join(tech_list) if tech_list else 'None specified'}
 Total projects: {new_count}
 """
     
-    # Suggest adding technologies as skills
+    if completed > 0:
+        result += f"\n✓ Completed pending major project action"
+    
+    # Suggest adding technologies as skills (and add pending action)
     if tech_list:
         result += f"""
 SKILLS SUGGESTION:
 These technologies were mentioned: {', '.join(tech_list)}
 Consider adding them as skills if not already present.
 """
+        # Check if we already have a skills action, if not add one
+        existing_skill_actions = [a for a in tracker.get_incomplete_actions() 
+                                  if a.action_type == ActionType.ADD_SKILLS]
+        if not existing_skill_actions:
+            tracker.add_skills_action(
+                skills=tech_list,
+                source_work_id=work_id,
+                source_work_name=f"{work.position} at {work.name}",
+            )
     
-    result += """
-NEXT STEPS:
-Ask user: "I've captured that project. Any other major projects from this role?"
-"""
+    result += f"\n{tracker.format_compact()}"
     
     return result

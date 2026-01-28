@@ -8,6 +8,7 @@ from resumejson_mcp.mcp.experience.v1.skills import tools as skill_tools
 from resumejson_mcp.mcp.experience.v1.basics import tools as basics_tools
 from resumejson_mcp.mcp.templates.v1 import tools as template_tools
 from resumejson_mcp.mcp.applications.v1 import tools as application_tools
+from resumejson_mcp.mcp.workflow.v1 import tools as workflow_tools
 
 
 mcp = FastMCP(
@@ -16,7 +17,29 @@ mcp = FastMCP(
         This server provides tools for managing JSON Resume data with MCP extensions
         and generating tailored resumes for job applications.
         
-        FIRST TIME SETUP:
+        ============================================================================
+        ⚠️  CRITICAL: PENDING ACTIONS WORKFLOW
+        ============================================================================
+        
+        This server tracks PENDING ACTIONS that you must complete. After any operation
+        that creates pending actions (e.g., add_work), you will see a summary like:
+        
+            📋 PENDING ACTIONS (DO NOT SKIP):
+            🔴 CRITICAL: Add accomplishment bullets to: Senior Engineer at Acme
+            🟠 HIGH: Add skills: Python, Kubernetes, Kafka (+5 more)
+        
+        YOU MUST:
+        1. Complete all CRITICAL actions before moving on
+        2. Complete HIGH priority actions in the same session
+        3. Use get_pending_todos() to check your pending work
+        4. Use complete_todo(action_id) or complete_todos_of_type(type) to mark done
+        
+        DO NOT ignore pending actions and move on to new requests.
+        
+        ============================================================================
+        FIRST TIME SETUP
+        ============================================================================
+        
         1. Run check_setup_status() to verify configuration
         2. If not configured, run setup_storage() to initialize directories
         3. Run initialize_experience() to create your experience.json file
@@ -32,16 +55,72 @@ mcp = FastMCP(
         
         2. AI GENERATES TAILORED RESUME
            → Call get_experience_for_tailoring() to get full experience data
-           → Analyze job description and select relevant content:
-             * Pick best 3-5 bullets per work position
-             * Select matching skills
-             * Choose relevant projects
-           → Craft tailored highlights (rewrite bullets to match JD keywords)
-           → Build a clean JSON Resume dict (NO mcp-details)
+           → Analyze job description requirements and keywords
+           
+           CRAFTING KEY HIGHLIGHTS (REQUIRED - 3-5):
+           Create a "keyHighlights" array with 3-5 TOP achievements that:
+             * Directly match the most important job requirements
+             * Showcase your strongest, most relevant accomplishments
+             * Lead with impact metrics when possible
+             * These appear prominently at the top of the resume!
+           
+           CRAFTING POSITION HIGHLIGHTS - PREFER EXISTING BULLETS:
+           The mcp-details.bullets contain WELL-CRAFTED accomplishments.
+           
+           CRITICAL: Use existing bullets as-is unless you are CERTAIN you can
+           improve them. The user has carefully written these bullets.
+           
+           For each position:
+             1. SELECT the most relevant existing bullets from mcp-details.bullets
+             2. Use them VERBATIM - do not reword unless clearly necessary
+             3. Only rewrite a bullet if:
+                - It needs a keyword from the JD that's genuinely missing
+                - You can add a specific metric that makes it stronger
+                - The original is unclear or poorly written
+             4. Use context from major_projects to understand the work,
+                but prefer the existing bullet text
+           
+           WHEN TO MODIFY (rare):
+             * Adding a specific keyword that's clearly missing
+             * Combining two related bullets into one stronger statement
+             * Adding quantification when you know the metric
+           
+           WHEN NOT TO MODIFY (default):
+             * Bullet already captures the accomplishment well
+             * You're just changing words to "sound better" - don't
+             * You're guessing at metrics you don't actually know
+           
+           COVERAGE REQUIREMENTS (STRICT):
+             * keyHighlights: REQUIRED - 3-5 top achievements for the role
+             * Include 70%+ of work positions (most positions should appear!)
+             * Each position MUST have 4-5 highlights (not just 3)
+             * Aim for 60%+ overall bullet coverage
+             * Older/less relevant positions can have 3 highlights minimum
+             * Select matching skills and relevant projects
+           
+           → Build a clean JSON Resume dict (NO mcp-details in output)
         
-        3. SAVE AND COMPILE
+        3. PREVIEW AND VALIDATE (REQUIRED)
+           → Call preview_tailored_resume(resume_data) BEFORE saving
+           → Review position-level coverage stats
+           → Fix any positions with missing or insufficient highlights
+           → Validation MUST pass before saving
+        
+        4. SAVE AND COMPILE
            → Call save_tailored_resume(application_id, resume_data)
            → Call render_and_compile(application_id) to generate PDF
+        
+        ============================================================================
+        ADDING WORK EXPERIENCE WORKFLOW
+        ============================================================================
+        
+        When adding work with add_work(), the system will automatically:
+        1. Track missing bullets as CRITICAL pending action
+        2. Track missing major projects as CRITICAL pending action
+        3. Extract technologies and track as HIGH priority skill additions
+        4. Detect potential portfolio projects as MEDIUM priority
+        
+        You MUST complete these actions before asking "what's next?"
         
         ============================================================================
         DATA STRUCTURE
@@ -70,17 +149,6 @@ mcp = FastMCP(
         CRITICAL: mcp-details are for STORAGE only. They help the AI understand
         context and generate tailored content. They should NOT appear in the
         final resume.json output.
-        
-        ============================================================================
-        IMPORTANT GUIDELINES
-        ============================================================================
-        
-        - ALWAYS extract and populate bullets and major projects when adding work
-        - INFER accomplishments from user descriptions - don't wait for explicit lists
-        - Ask follow-up questions to gather complete information
-        - Minimum 2-3 bullets and 1-2 major projects per work position
-        - When tailoring: prioritize keywords from the job description
-        - Rewrite bullets to emphasize relevant skills for the target role
     """,
 )
 
@@ -139,12 +207,19 @@ mcp.add_tool(template_tools.preview_render)
 # Application tools (job application workflow)
 mcp.add_tool(application_tools.create_job_application)
 mcp.add_tool(application_tools.get_experience_for_tailoring)
+mcp.add_tool(application_tools.preview_tailored_resume)
 mcp.add_tool(application_tools.save_tailored_resume)
 mcp.add_tool(application_tools.render_and_compile)
 mcp.add_tool(application_tools.list_applications)
 mcp.add_tool(application_tools.get_application)
 mcp.add_tool(application_tools.get_application_resume)
 mcp.add_tool(application_tools.delete_application)
+
+# Workflow tools (pending actions / todos)
+mcp.add_tool(workflow_tools.get_pending_todos)
+mcp.add_tool(workflow_tools.complete_todo)
+mcp.add_tool(workflow_tools.complete_todos_of_type)
+mcp.add_tool(workflow_tools.clear_completed_todos)
 
 
 if __name__ == "__main__":
