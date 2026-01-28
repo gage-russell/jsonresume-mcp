@@ -1,7 +1,6 @@
 """Data access layer for JSON Resume experience storage with MCP extensions."""
 
 import json
-from pathlib import Path
 from typing import Callable, Any
 from uuid import uuid4
 
@@ -29,22 +28,18 @@ class ExperienceStore:
         self.storage_paths = StoragePaths()
         self.storage_paths.ensure_paths()
 
-    @property
-    def experience_file_path(self) -> Path:
-        return self.storage_paths.experience_folder / "experience.json"
-
     # ========================================================================
     # Core Operations
     # ========================================================================
 
     def load_experience(self) -> Resume:
-        if not self.experience_file_path.exists():
-            raise FileNotFoundError(f"Experience file not found at {self.experience_file_path}")
-        with open(self.experience_file_path, "r") as f:
+        if not self.storage_paths.experience_file.exists():
+            raise FileNotFoundError(f"Experience file not found at {self.storage_paths.experience_file}")
+        with open(self.storage_paths.experience_file, "r") as f:
             return Resume(**json.load(f))
 
     def save_experience(self, experience: Resume) -> None:
-        with open(self.experience_file_path, "w") as f:
+        with open(self.storage_paths.experience_file, "w") as f:
             json.dump(
                 experience.model_dump(by_alias=True, exclude_none=True),
                 f,
@@ -58,7 +53,7 @@ class ExperienceStore:
         return experience
 
     def experience_exists(self) -> bool:
-        return self.experience_file_path.exists()
+        return self.storage_paths.experience_file.exists()
 
     # ========================================================================
     # Internal Helpers

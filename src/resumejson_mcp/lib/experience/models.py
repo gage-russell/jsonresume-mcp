@@ -373,5 +373,11 @@ class Resume(BaseModel):
     references: list[Reference] = Field(default_factory=list, description="References")
     projects: list[Project] = Field(default_factory=list, description="Projects")
     meta: Meta | None = Field(None, description="Meta information")
+    # MCP Extension
+    key_highlights: list[str] = Field(
+        default_factory=list,
+        description="Key career highlights across all experience - typically 3-5 impressive accomplishments for top of resume",
+        alias="keyHighlights",
+    )
 
     model_config = ConfigDict(populate_by_name=True)
