@@ -196,6 +196,14 @@
   },
   
   "properties": {
+    "keyHighlights": {
+      "type": "array",
+      "description": "Key career highlights across all experience - typically 3-5 impressive accomplishments displayed at the top of resume",
+      "items": {
+        "type": "string"
+      }
+    },
+    
     "work": {
       "type": "array",
       "description": "Work entries with MCP extensions",

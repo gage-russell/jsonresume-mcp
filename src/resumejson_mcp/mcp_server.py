@@ -6,12 +6,15 @@ from resumejson_mcp.mcp.experience.v1.projects import tools as project_tools
 from resumejson_mcp.mcp.experience.v1.education import tools as education_tools
 from resumejson_mcp.mcp.experience.v1.skills import tools as skill_tools
 from resumejson_mcp.mcp.experience.v1.basics import tools as basics_tools
+from resumejson_mcp.mcp.templates.v1 import tools as template_tools
+from resumejson_mcp.mcp.applications.v1 import tools as application_tools
 
 
 mcp = FastMCP(
     name="ResumeJSON-MCP",
     instructions="""
-        This server provides tools for managing JSON Resume data with MCP extensions.
+        This server provides tools for managing JSON Resume data with MCP extensions
+        and generating tailored resumes for job applications.
         
         FIRST TIME SETUP:
         1. Run check_setup_status() to verify configuration
@@ -19,51 +22,65 @@ mcp = FastMCP(
         3. Run initialize_experience() to create your experience.json file
         4. Start adding work experience with add_work()
         
-        OVERVIEW:
-        The system stores comprehensive career experience data following the JSON Resume schema
-        with MCP extensions. Data is stored in a single experience.json file and can be used
-        to generate tailored resumes for specific job applications.
+        ============================================================================
+        CORE WORKFLOW: GENERATING TAILORED RESUMES
+        ============================================================================
         
-        DATA STRUCTURE:
-        - Basics: Personal information (name, email, phone, location, profiles, summary) - use get/set basics tools
-        - Work: Work experience with nested bullets and major projects - use add/update/delete work tools
-        - Education: Degrees and institutions - use add/update/delete education tools
-        - Skills: Individual skills organized by category - use add/update/delete skill tools
-        - Projects: Portfolio/showcase projects - use add/update/delete project tools
+        1. USER PROVIDES JOB DESCRIPTION
+           → Call create_job_application(company, position, job_description)
+           → Creates folder with job_description.txt
         
-        CRITICAL DISTINCTION - TWO TYPES OF PROJECTS:
+        2. AI GENERATES TAILORED RESUME
+           → Call get_experience_for_tailoring() to get full experience data
+           → Analyze job description and select relevant content:
+             * Pick best 3-5 bullets per work position
+             * Select matching skills
+             * Choose relevant projects
+           → Craft tailored highlights (rewrite bullets to match JD keywords)
+           → Build a clean JSON Resume dict (NO mcp-details)
         
-        1. work[].mcp_details.major_projects (use add_major_project_to_work):
-           - Contextual information about projects done at a specific job
-           - Helps AI understand work deeply to generate tailored resume bullets
-           - NOT displayed directly on resumes
-           - Used by AI to create targeted highlights for job applications
+        3. SAVE AND COMPILE
+           → Call save_tailored_resume(application_id, resume_data)
+           → Call render_and_compile(application_id) to generate PDF
         
-        2. Top-level projects (use add_project):
-           - Portfolio/showcase projects that appear directly on resumes
-           - E.g., GitHub repos, side projects, open source contributions
-           - Have their own highlights that appear on the resume
-           - Separate from work experience
+        ============================================================================
+        DATA STRUCTURE
+        ============================================================================
         
-        MCP EXTENSIONS:
+        experience.json (stored in experience_folder):
+        - Comprehensive career data with mcp-details
+        - Used as SOURCE for generating tailored resumes
+        - Contains: basics, work, education, skills, projects
+        
+        resume.json (in each application folder):
+        - Clean JSON Resume spec (NO mcp-details)
+        - Contains: basics, work, education, skills, projects
+        - work[].highlights = tailored bullet points
+        
+        ============================================================================
+        MCP-DETAILS FIELDS (experience.json only)
+        ============================================================================
+        
         Each section can include mcp-details with:
         - id: Unique identifier (required)
         - bullets: List of accomplishment/responsibility bullet points (for work)
         - major_projects: Detailed project context for resume generation (for work)
         - tags: Keywords for job matching and filtering
         
-        WORKFLOW FOR ADDING EXPERIENCE:
-        1. Add work positions with bullets and major_projects using add_work
-        2. Add education background using add_education
-        3. Add portfolio projects using add_project
-        4. Add skills mentioned in the work/projects (coming soon)
+        CRITICAL: mcp-details are for STORAGE only. They help the AI understand
+        context and generate tailored content. They should NOT appear in the
+        final resume.json output.
         
-        IMPORTANT GUIDELINES:
+        ============================================================================
+        IMPORTANT GUIDELINES
+        ============================================================================
+        
         - ALWAYS extract and populate bullets and major projects when adding work
         - INFER accomplishments from user descriptions - don't wait for explicit lists
         - Ask follow-up questions to gather complete information
         - Minimum 2-3 bullets and 1-2 major projects per work position
-        - If user mentions side projects/GitHub repos, use add_project (NOT add_major_project_to_work)
+        - When tailoring: prioritize keywords from the job description
+        - Rewrite bullets to emphasize relevant skills for the target role
     """,
 )
 
@@ -109,6 +126,25 @@ mcp.add_tool(project_tools.add_project)
 mcp.add_tool(project_tools.add_projects)
 mcp.add_tool(project_tools.update_project)
 mcp.add_tool(project_tools.delete_project)
+
+# Template tools
+mcp.add_tool(template_tools.list_templates)
+mcp.add_tool(template_tools.get_template_content)
+mcp.add_tool(template_tools.create_template)
+mcp.add_tool(template_tools.update_template)
+mcp.add_tool(template_tools.delete_template)
+mcp.add_tool(template_tools.render_resume)
+mcp.add_tool(template_tools.preview_render)
+
+# Application tools (job application workflow)
+mcp.add_tool(application_tools.create_job_application)
+mcp.add_tool(application_tools.get_experience_for_tailoring)
+mcp.add_tool(application_tools.save_tailored_resume)
+mcp.add_tool(application_tools.render_and_compile)
+mcp.add_tool(application_tools.list_applications)
+mcp.add_tool(application_tools.get_application)
+mcp.add_tool(application_tools.get_application_resume)
+mcp.add_tool(application_tools.delete_application)
 
 
 if __name__ == "__main__":

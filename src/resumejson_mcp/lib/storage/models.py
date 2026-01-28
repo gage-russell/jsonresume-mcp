@@ -39,6 +39,18 @@ class StoragePaths(BaseModel):
         """Path to the hire-me configuration file (not changable)."""
         return Path.home() / ".hire-me" / "config.yaml"
     
+    @computed_field
+    @property
+    def experience_file(self) -> Path:
+        """Path to the experience data file (not changable)."""
+        return self.experience_folder / "experience.json"
+    
+    @computed_field
+    @property
+    def templates_folder(self) -> Path:
+        """Path to the resume templates directory."""
+        return self.experience_folder / "templates"
+    
     @property
     def default_base_path(self) -> Path:
         """Default base path for hire-me storage."""
@@ -57,6 +69,7 @@ class StoragePaths(BaseModel):
     def ensure_paths(self) -> None:
         """Create storage directories if they don't exist."""
         self.experience_folder.mkdir(parents=True, exist_ok=True)
+        self.templates_folder.mkdir(parents=True, exist_ok=True)
         self.output_folder.mkdir(parents=True, exist_ok=True)
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
     

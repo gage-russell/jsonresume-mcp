@@ -55,14 +55,14 @@ def initialize_experience() -> str:
     store = ExperienceStore()
     
     if store.experience_exists():
-        return f"""⚠️  Experience file already exists at: {store.experience_file_path}
+        return f"""⚠️  Experience file already exists at: {store.store.storage_paths.experience_file}
 
 Use get_all_work and other tools to view and manage existing data.
 If you want to start fresh, manually delete the file first."""
     
     try:
         store.initialize_experience()
-        return f"""✓ Successfully initialized experience.json at: {store.experience_file_path}
+        return f"""✓ Successfully initialized experience.json at: {store.store.storage_paths.experience_file}
 
 The file has been created with an empty JSON Resume structure.
 You can now start adding:
@@ -90,7 +90,7 @@ def check_setup_status() -> str:
     experience_folder_exists = paths.experience_folder.exists()
     output_folder_exists = paths.output_folder.exists()
     config_exists = paths.config_file.exists()
-    experience_file_exists = store.experience_file_path.exists()
+    experience_file_exists = store.store.storage_paths.experience_file.exists()
     
     status = []
     status.append("resumejson-mcp Setup Status")
@@ -98,7 +98,7 @@ def check_setup_status() -> str:
     status.append(f"{'✓' if config_exists else '✗'} Config file: {paths.config_file}")
     status.append(f"{'✓' if experience_folder_exists else '✗'} Experience folder: {paths.experience_folder}")
     status.append(f"{'✓' if output_folder_exists else '✗'} Output folder: {paths.output_folder}")
-    status.append(f"{'✓' if experience_file_exists else '✗'} Experience file: {store.experience_file_path}")
+    status.append(f"{'✓' if experience_file_exists else '✗'} Experience file: {store.store.storage_paths.experience_file}")
     status.append("")
     
     if all([experience_folder_exists, output_folder_exists, config_exists, experience_file_exists]):
@@ -148,7 +148,7 @@ async def get_experience_json() -> str:
     - Validate the JSON Resume format with MCP extensions
     """
     store = ExperienceStore()
-    if not store.experience_file_path.exists():
+    if not store.store.storage_paths.experience_file.exists():
         return '{"error": "Experience file not found. Use initialize_experience tool first."}'
     
-    return store.experience_file_path.read_text()
+    return store.store.storage_paths.experience_file.read_text()

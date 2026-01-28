@@ -16,6 +16,12 @@ The extension schema adds `x-` prefixed fields to the standard JSON Resume v1.0.
 
 ## Extension Fields
 
+### Top-Level Extensions
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `keyHighlights` | array[string] | Key career highlights across all experience - typically 3-5 impressive accomplishments displayed at the top of resume |
+
 ### Work Experience Extensions (`x-` fields in `work[]`)
 
 | Field | Type | Description |
