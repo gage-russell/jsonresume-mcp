@@ -6,6 +6,8 @@ from fastmcp.tools import tool
 
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
 from resumejson_mcp.lib.experience.models import Project
+from resumejson_mcp.mcp.tags import PROJECTS_TAGS, CREATE, READ, UPDATE, DELETE, BULK
+from resumejson_mcp.mcp.experience.shared_helpers import handle_id_collision
 from resumejson_mcp.mcp.experience.v1.projects.helpers import (
     format_project_result,
     ensure_project_ids,
@@ -14,6 +16,7 @@ from resumejson_mcp.mcp.experience.v1.projects.helpers import (
 
 @tool(
     name="get_all_projects",
+    tags=PROJECTS_TAGS | {"read"},
     description="""Get all portfolio projects from experience store.
     
     Portfolio projects are showcased work that appears directly on resumes.
@@ -66,6 +69,7 @@ For example: open source contributions, side projects, or personal websites?"
 
 @tool(
     name="get_project_by_id",
+    tags=PROJECTS_TAGS | {"read"},
     description="""Get a specific portfolio project by its mcp-details.id.
     
     Args:
@@ -87,6 +91,7 @@ Use get_all_projects to see existing projects and their IDs."""
 
 @tool(
     name="add_project",
+    tags=PROJECTS_TAGS | {"create"},
     description="""Add a new portfolio project.
     
     Portfolio projects are showcase work that appears directly on resumes
@@ -115,11 +120,7 @@ def add_project(project: Project) -> str:
     ensure_project_ids(project)
     
     # Check for ID collision and regenerate if needed
-    try:
-        store.get_project_by_id(project.mcp_details.id)
-        project.mcp_details.id = str(uuid4())
-    except ValueError:
-        pass
+    handle_id_collision(project, store.get_project_by_id, ensure_project_ids)
     
     store.add_project(project)
     
@@ -128,6 +129,7 @@ def add_project(project: Project) -> str:
 
 @tool(
     name="add_projects",
+    tags=PROJECTS_TAGS | {"create", "bulk"},
     description="""Add multiple portfolio projects at once.
     
     Use this for bulk adding when the user provides multiple projects.
@@ -138,17 +140,10 @@ def add_project(project: Project) -> str:
 def add_projects(projects: list[Project]) -> str:
     store = ExperienceStore()
     
-    # Ensure all IDs are set
+    # Ensure all IDs are set and check for collisions
     for project in projects:
         ensure_project_ids(project)
-    
-    # Check for ID collisions
-    for project in projects:
-        try:
-            store.get_project_by_id(project.mcp_details.id)
-            project.mcp_details.id = str(uuid4())
-        except ValueError:
-            pass
+        handle_id_collision(project, store.get_project_by_id, ensure_project_ids)
     
     store.add_projects(projects)
     
@@ -164,6 +159,7 @@ Ask user: "I've added those projects. Would you like to add more, or move on to 
 
 @tool(
     name="update_project",
+    tags=PROJECTS_TAGS | {"update"},
     description="""Update an existing portfolio project.
     
     Pass the complete Project object with mcp_details.id matching an existing project.
@@ -192,6 +188,7 @@ RECOVERY:
 
 @tool(
     name="delete_project",
+    tags=PROJECTS_TAGS | {"delete"},
     description="""Delete a portfolio project by its mcp-details.id.
     
     Args:

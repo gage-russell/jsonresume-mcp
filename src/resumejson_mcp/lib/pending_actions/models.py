@@ -104,14 +104,15 @@ class PendingActionsResult(BaseModel):
         if not incomplete:
             return "\n✅ No pending actions - workflow complete!"
         
-        lines = ["\n" + "=" * 60, "📋 PENDING ACTIONS (DO NOT SKIP):", "=" * 60]
-        
-        for i, action in enumerate(incomplete, 1):
-            lines.append(f"{i}. {action.to_instruction()}")
-        
-        lines.append("")
-        lines.append("⚠️  Complete these actions before moving on.")
-        lines.append("Use get_pending_todos to check remaining actions.")
+        lines = [
+            "\n" + "=" * 60,
+            "📋 PENDING ACTIONS (DO NOT SKIP):",
+            "=" * 60,
+            *[f"{i}. {action.to_instruction()}" for i, action in enumerate(incomplete, 1)],
+            "",
+            "⚠️  Complete these actions before moving on.",
+            "Use get_pending_todos to check remaining actions.",
+        ]
         
         return "\n".join(lines)
     

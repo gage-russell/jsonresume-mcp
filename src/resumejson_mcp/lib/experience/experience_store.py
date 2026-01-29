@@ -1,6 +1,9 @@
 """Data access layer for JSON Resume experience storage with MCP extensions."""
 
 import json
+import shutil
+from datetime import datetime
+from pathlib import Path
 from typing import Callable, Any
 from uuid import uuid4
 
@@ -38,7 +41,9 @@ class ExperienceStore:
         with open(self.storage_paths.experience_file, "r") as f:
             return Resume(**json.load(f))
 
-    def save_experience(self, experience: Resume) -> None:
+    def save_experience(self, experience: Resume, create_backup: bool = True) -> None:
+        if create_backup and self.storage_paths.experience_file.exists():
+            self._create_backup()
         with open(self.storage_paths.experience_file, "w") as f:
             json.dump(
                 experience.model_dump(by_alias=True, exclude_none=True),
@@ -49,11 +54,75 @@ class ExperienceStore:
 
     def initialize_experience(self, basics: Basics | None = None) -> Resume:
         experience = Resume(basics=basics)
-        self.save_experience(experience)
+        self.save_experience(experience, create_backup=False)  # No backup for init
         return experience
 
     def experience_exists(self) -> bool:
         return self.storage_paths.experience_file.exists()
+
+    # ========================================================================
+    # Backup Operations
+    # ========================================================================
+
+    @property
+    def _backup_dir(self) -> Path:
+        """Directory for storing backups."""
+        return self.storage_paths.experience_folder / ".backups"
+
+    def _create_backup(self) -> Path:
+        """Create a timestamped backup of the experience file."""
+        self._backup_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = self._backup_dir / f"experience_{timestamp}.json"
+        shutil.copy2(self.storage_paths.experience_file, backup_path)
+        
+        # Keep only last 10 backups
+        self._cleanup_old_backups(keep=10)
+        return backup_path
+
+    def _cleanup_old_backups(self, keep: int = 10) -> None:
+        """Remove old backups, keeping only the most recent ones."""
+        if not self._backup_dir.exists():
+            return
+        
+        backups = sorted(self._backup_dir.glob("experience_*.json"), reverse=True)
+        for old_backup in backups[keep:]:
+            old_backup.unlink()
+
+    def list_backups(self) -> list[Path]:
+        """List all available backups, newest first."""
+        if not self._backup_dir.exists():
+            return []
+        return sorted(self._backup_dir.glob("experience_*.json"), reverse=True)
+
+    def restore_from_backup(self, backup_path: Path | None = None) -> Resume:
+        """Restore experience from a backup file.
+        
+        Args:
+            backup_path: Specific backup to restore. If None, uses most recent.
+            
+        Returns:
+            The restored Resume object.
+            
+        Raises:
+            FileNotFoundError: If no backups exist or specified backup not found.
+        """
+        if backup_path is None:
+            backups = self.list_backups()
+            if not backups:
+                raise FileNotFoundError("No backups available")
+            backup_path = backups[0]  # Most recent
+        
+        if not backup_path.exists():
+            raise FileNotFoundError(f"Backup not found: {backup_path}")
+        
+        # Create a backup of current state before restoring
+        if self.storage_paths.experience_file.exists():
+            self._create_backup()
+        
+        # Copy backup to experience file
+        shutil.copy2(backup_path, self.storage_paths.experience_file)
+        return self.load_experience()
 
     # ========================================================================
     # Internal Helpers

@@ -4,196 +4,26 @@ from fastmcp.tools import tool
 
 from resumejson_mcp.lib.applications.application_store import ApplicationStore
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
-from resumejson_mcp.lib.experience.models import Resume
-
-
-def _validate_resume_content(resume_data: dict, experience_store: ExperienceStore) -> tuple[bool, str, dict]:
-    """Validate tailored resume has sufficient content.
-    
-    Returns:
-        (is_valid, error_message, stats_dict)
-    """
-    errors = []
-    warnings = []
-    stats = {
-        "work_positions_included": 0,
-        "work_positions_available": 0,
-        "total_highlights": 0,
-        "positions_missing_highlights": [],
-        "skills_included": 0,
-        "skills_available": 0,
-        "projects_included": 0,
-        "projects_available": 0,
-        "bullets_coverage_pct": 0,
-        "position_coverage": [],  # Per-position tracking
-        "positions_excluded": [],  # Positions not included at all
-        "has_key_highlights": False,
-        "key_highlights_count": 0,
-    }
-    
-    # Validate keyHighlights - REQUIRED
-    key_highlights = resume_data.get("keyHighlights", [])
-    stats["key_highlights_count"] = len(key_highlights)
-    stats["has_key_highlights"] = len(key_highlights) >= 3
-    
-    if len(key_highlights) == 0:
-        errors.append("❌ keyHighlights is REQUIRED - add 3-5 top achievements that match the job description")
-    elif len(key_highlights) < 3:
-        warnings.append(f"⚠️  Only {len(key_highlights)} keyHighlights (recommended: 3-5 top achievements)")
-    
-    # Load full experience for comparison
-    try:
-        full_experience = experience_store.load_experience()
-    except Exception:
-        return True, "", stats  # Can't validate without experience data
-    
-    # Build lookup of experience positions by company+title for matching
-    experience_positions = {}
-    for work in full_experience.work:
-        key = f"{work.position}|{work.name}".lower()
-        bullet_count = len(work.mcp_details.bullets) if work.mcp_details and work.mcp_details.bullets else 0
-        experience_positions[key] = {
-            "position": work.position,
-            "company": work.name,
-            "available_bullets": bullet_count,
-            "included": False,
-            "highlights_used": 0,
-        }
-    
-    # Count available content
-    stats["work_positions_available"] = len(full_experience.work)
-    stats["skills_available"] = len(full_experience.skills)
-    stats["projects_available"] = len(full_experience.projects)
-    
-    total_available_bullets = sum(p["available_bullets"] for p in experience_positions.values())
-    
-    # Validate work positions and track coverage
-    work_entries = resume_data.get("work", [])
-    stats["work_positions_included"] = len(work_entries)
-    
-    if len(work_entries) == 0:
-        errors.append("❌ No work positions included - resume must have at least 1 work entry")
-    
-    # Check minimum positions included (70% of available)
-    min_positions_required = max(1, int(len(experience_positions) * 0.7))
-    if len(work_entries) < min_positions_required:
-        errors.append(f"❌ Only {len(work_entries)} positions included - need at least {min_positions_required} (70% of {len(experience_positions)} available)")
-    
-    for work in work_entries:
-        position = work.get("position", "Unknown")
-        company = work.get("name", "Unknown")
-        highlights = work.get("highlights", [])
-        
-        stats["total_highlights"] += len(highlights)
-        
-        # Try to match to experience position
-        key = f"{position}|{company}".lower()
-        if key in experience_positions:
-            experience_positions[key]["included"] = True
-            experience_positions[key]["highlights_used"] = len(highlights)
-        
-        if len(highlights) == 0:
-            errors.append(f"❌ {position} at {company}: No highlights (required: 4-5)")
-            stats["positions_missing_highlights"].append(f"{position} at {company}")
-        elif len(highlights) < 3:
-            errors.append(f"❌ {position} at {company}: Only {len(highlights)} highlights (minimum: 3)")
-        elif len(highlights) < 4:
-            warnings.append(f"⚠️  {position} at {company}: Only {len(highlights)} highlights (recommended: 4-5)")
-    
-    # Build per-position coverage stats
-    for key, pos_data in experience_positions.items():
-        if pos_data["included"]:
-            coverage_pct = 0
-            if pos_data["available_bullets"] > 0:
-                coverage_pct = round((pos_data["highlights_used"] / pos_data["available_bullets"]) * 100)
-            stats["position_coverage"].append({
-                "position": pos_data["position"],
-                "company": pos_data["company"],
-                "available": pos_data["available_bullets"],
-                "used": pos_data["highlights_used"],
-                "coverage_pct": coverage_pct,
-            })
-        else:
-            stats["positions_excluded"].append({
-                "position": pos_data["position"],
-                "company": pos_data["company"],
-                "available": pos_data["available_bullets"],
-            })
-    
-    # Calculate overall bullets coverage
-    if total_available_bullets > 0:
-        stats["bullets_coverage_pct"] = round((stats["total_highlights"] / total_available_bullets) * 100, 1)
-    
-    # Validate minimum coverage (60%)
-    if stats["bullets_coverage_pct"] < 60 and total_available_bullets > 0:
-        errors.append(f"❌ Only {stats['bullets_coverage_pct']}% bullet coverage - need at least 60%")
-    
-    # Validate skills
-    skills = resume_data.get("skills", [])
-    stats["skills_included"] = len(skills)
-    if len(skills) == 0:
-        warnings.append("⚠️  No skills section included")
-    
-    # Validate projects
-    projects = resume_data.get("projects", [])
-    stats["projects_included"] = len(projects)
-    
-    # Build message
-    message = ""
-    if errors:
-        message = "VALIDATION FAILED:\n" + "\n".join(errors)
-        if warnings:
-            message += "\n\nWARNINGS:\n" + "\n".join(warnings)
-        return False, message, stats
-    
-    if warnings:
-        message = "WARNINGS:\n" + "\n".join(warnings)
-    
-    return True, message, stats
-
-
-def _format_coverage_report(stats: dict) -> str:
-    """Format a coverage report from validation stats."""
-    report = "\n📊 CONTENT COVERAGE REPORT\n" + "-" * 50 + "\n"
-    
-    # Per-position coverage table
-    report += "\n📋 POSITION-LEVEL COVERAGE:\n"
-    if stats.get("position_coverage"):
-        for pos in stats["position_coverage"]:
-            status = "✓" if pos["coverage_pct"] >= 50 else "⚠️" if pos["coverage_pct"] > 0 else "❌"
-            report += f"  {status} {pos['position']} at {pos['company']}\n"
-            report += f"      {pos['used']}/{pos['available']} bullets ({pos['coverage_pct']}%)\n"
-    
-    # Excluded positions
-    if stats.get("positions_excluded"):
-        report += "\n❌ POSITIONS NOT INCLUDED:\n"
-        for pos in stats["positions_excluded"]:
-            report += f"  • {pos['position']} at {pos['company']} ({pos['available']} bullets available)\n"
-    
-    # Summary stats
-    report += "\n" + "-" * 50 + "\n"
-    report += f"Work Positions: {stats['work_positions_included']} of {stats['work_positions_available']} included\n"
-    report += f"Total Highlights: {stats['total_highlights']} bullets used\n"
-    report += f"Overall Coverage: {stats['bullets_coverage_pct']}% of available experience\n"
-    report += f"Skills: {stats['skills_included']} of {stats['skills_available']} categories\n"
-    report += f"Projects: {stats['projects_included']} of {stats['projects_available']} included\n"
-    
-    # Key Highlights status
-    if stats.get("has_key_highlights"):
-        report += f"Key Highlights: ✓ {stats['key_highlights_count']} included\n"
-    else:
-        report += f"Key Highlights: ❌ {stats['key_highlights_count']} (REQUIRED: 3-5)\n"
-    
-    if stats.get("positions_missing_highlights"):
-        report += f"\n⚠️  Positions with 0 highlights (INVALID):\n"
-        for pos in stats["positions_missing_highlights"]:
-            report += f"   • {pos}\n"
-    
-    return report
+from resumejson_mcp.mcp.tags import (
+    APP_TAGS, 
+    COVER_LETTER_TAGS, 
+    RESUME_WORKFLOW_TAGS,
+    CREATE,
+    READ,
+    DELETE,
+    VALIDATE,
+    EXPORT,
+)
+from .helpers import (
+    validate_resume_content,
+    format_coverage_report,
+    ValidationStats,
+)
 
 
 @tool(
     name="create_job_application",
+    tags=RESUME_WORKFLOW_TAGS | {"create"},
     description="""Create a new job application folder with job description.
     
     This is the first step in the resume generation workflow:
@@ -245,6 +75,7 @@ def create_job_application(company: str, position: str, job_description: str) ->
 
 @tool(
     name="get_experience_for_tailoring",
+    tags=RESUME_WORKFLOW_TAGS | {"read"},
     description="""Get the user's full experience data for tailoring a resume.
     
     Returns the complete experience.json content which includes:
@@ -300,6 +131,7 @@ def get_experience_for_tailoring() -> str:
 
 @tool(
     name="preview_tailored_resume",
+    tags=RESUME_WORKFLOW_TAGS | {"validate"},
     description="""Preview and validate a tailored resume BEFORE saving.
     
     CRITICAL: Always call this tool before save_tailored_resume to verify:
@@ -319,7 +151,7 @@ def get_experience_for_tailoring() -> str:
 def preview_tailored_resume(resume_data: dict) -> str:
     experience_store = ExperienceStore()
     
-    is_valid, message, stats = _validate_resume_content(resume_data, experience_store)
+    validation = validate_resume_content(resume_data, experience_store)
     
     result = "📋 RESUME PREVIEW & VALIDATION\n" + "=" * 60 + "\n\n"
     
@@ -360,18 +192,18 @@ def preview_tailored_resume(resume_data: dict) -> str:
         result += f"  • {name}\n"
     
     # Coverage report
-    result += _format_coverage_report(stats)
+    result += format_coverage_report(validation.stats)
     
     # Validation result
     result += "\n" + "=" * 60 + "\n"
-    if is_valid:
+    if validation.is_valid:
         result += "✅ VALIDATION PASSED\n"
-        if message:
-            result += f"\n{message}\n"
+        if validation.message:
+            result += f"\n{validation.message}\n"
         result += "\n🎯 NEXT STEP: Call save_tailored_resume() to save this resume.\n"
     else:
         result += "❌ VALIDATION FAILED\n\n"
-        result += message + "\n"
+        result += validation.message + "\n"
         result += "\n⚠️  FIX THE ERRORS ABOVE before calling save_tailored_resume().\n"
         result += "Each work position MUST have at least 3 highlights.\n"
     
@@ -380,6 +212,7 @@ def preview_tailored_resume(resume_data: dict) -> str:
 
 @tool(
     name="save_tailored_resume",
+    tags=RESUME_WORKFLOW_TAGS | {"create"},
     description="""Save a tailored resume to an application folder.
     
     IMPORTANT: Call preview_tailored_resume() first to validate content!
@@ -413,12 +246,12 @@ def save_tailored_resume(application_id: str, resume_data: dict) -> str:
     experience_store = ExperienceStore()
     
     # Validate content
-    is_valid, message, stats = _validate_resume_content(resume_data, experience_store)
+    validation = validate_resume_content(resume_data, experience_store)
     
-    if not is_valid:
+    if not validation.is_valid:
         result = "❌ RESUME NOT SAVED - VALIDATION FAILED\n" + "=" * 60 + "\n\n"
-        result += message + "\n"
-        result += _format_coverage_report(stats)
+        result += validation.message + "\n"
+        result += format_coverage_report(validation.stats)
         result += "\n⚠️  FIX THE ERRORS ABOVE and try again.\n"
         result += "TIP: Call preview_tailored_resume() first to check your content.\n"
         return result
@@ -431,11 +264,11 @@ def save_tailored_resume(application_id: str, resume_data: dict) -> str:
         result += f"File: {path}\n"
         
         # Show coverage stats
-        result += _format_coverage_report(stats)
+        result += format_coverage_report(validation.stats)
         
         # Show warnings if any
-        if message:
-            result += f"\n{message}\n"
+        if validation.message:
+            result += f"\n{validation.message}\n"
         
         result += "\n🎯 NEXT STEP:\n"
         result += f"Call render_and_compile(application_id='{application_id}') to generate the PDF.\n"
@@ -449,6 +282,7 @@ def save_tailored_resume(application_id: str, resume_data: dict) -> str:
 
 @tool(
     name="render_and_compile",
+    tags=RESUME_WORKFLOW_TAGS | {"export"},
     description="""Render resume to LaTeX and compile to PDF.
     
     This is the final step: takes the resume.json, renders it with the
@@ -501,6 +335,7 @@ def render_and_compile(application_id: str, template_name: str = "default.tex.j2
 
 @tool(
     name="list_applications",
+    tags=APP_TAGS | {"read"},
     description="""List all job applications.
     
     Returns:
@@ -540,6 +375,7 @@ def list_applications() -> str:
 
 @tool(
     name="get_application",
+    tags=APP_TAGS | {"read"},
     description="""Get details of a specific application.
     
     Args:
@@ -584,6 +420,7 @@ def get_application(application_id: str) -> str:
 
 @tool(
     name="delete_application",
+    tags=APP_TAGS | {"delete"},
     description="""Delete an application and all its files.
     
     Args:
@@ -608,6 +445,7 @@ def delete_application(application_id: str) -> str:
 
 @tool(
     name="get_application_resume",
+    tags=APP_TAGS | {"read"},
     description="""Get the tailored resume.json content from an application.
     
     Args:
@@ -633,3 +471,443 @@ def get_application_resume(application_id: str) -> str:
         return result
     except Exception as e:
         return f"❌ ERROR: {str(e)}"
+
+
+@tool(
+    name="compare_resumes",
+    tags=APP_TAGS | {"read"},
+    description="""Compare two tailored resumes to show differences.
+    
+    Useful for understanding how resumes were customized for different jobs
+    or for reviewing variations in how you've presented your experience.
+    
+    Compares:
+    - Key highlights
+    - Work positions included
+    - Highlights per position
+    - Skills included
+    - Projects included
+    
+    Args:
+        application_id_1: First application ID
+        application_id_2: Second application ID
+    
+    Returns:
+        Side-by-side comparison of the two resumes"""
+)
+def compare_resumes(application_id_1: str, application_id_2: str) -> str:
+    """Compare two tailored resumes to show differences."""
+    app_store = ApplicationStore()
+    
+    try:
+        resume_1 = app_store.load_resume(application_id_1)
+        resume_2 = app_store.load_resume(application_id_2)
+    except Exception as e:
+        return f"❌ ERROR loading resumes: {str(e)}"
+    
+    if resume_1 is None:
+        return f"❌ No resume found for: {application_id_1}"
+    if resume_2 is None:
+        return f"❌ No resume found for: {application_id_2}"
+    
+    result = "📊 RESUME COMPARISON\n" + "=" * 70 + "\n\n"
+    result += f"📁 Resume 1: {application_id_1}\n"
+    result += f"📁 Resume 2: {application_id_2}\n\n"
+    
+    # Compare key highlights
+    key_highlights_1 = resume_1.get("keyHighlights", [])
+    key_highlights_2 = resume_2.get("keyHighlights", [])
+    
+    result += "-" * 70 + "\n"
+    result += "🌟 KEY HIGHLIGHTS\n"
+    result += "-" * 70 + "\n"
+    result += f"Resume 1: {len(key_highlights_1)} | Resume 2: {len(key_highlights_2)}\n\n"
+    
+    # Find unique highlights
+    set_1 = set(key_highlights_1)
+    set_2 = set(key_highlights_2)
+    common = set_1 & set_2
+    only_in_1 = set_1 - set_2
+    only_in_2 = set_2 - set_1
+    
+    if common:
+        result += f"  ✓ Common ({len(common)}):\n"
+        for h in list(common)[:3]:
+            result += f"    • {h[:70]}...\n" if len(h) > 70 else f"    • {h}\n"
+    
+    if only_in_1:
+        result += f"\n  📁 Only in Resume 1 ({len(only_in_1)}):\n"
+        for h in list(only_in_1)[:3]:
+            result += f"    • {h[:70]}...\n" if len(h) > 70 else f"    • {h}\n"
+    
+    if only_in_2:
+        result += f"\n  📁 Only in Resume 2 ({len(only_in_2)}):\n"
+        for h in list(only_in_2)[:3]:
+            result += f"    • {h[:70]}...\n" if len(h) > 70 else f"    • {h}\n"
+    
+    # Compare work positions
+    work_1 = resume_1.get("work", [])
+    work_2 = resume_2.get("work", [])
+    
+    result += "\n" + "-" * 70 + "\n"
+    result += "💼 WORK POSITIONS\n"
+    result += "-" * 70 + "\n"
+    result += f"Resume 1: {len(work_1)} positions | Resume 2: {len(work_2)} positions\n\n"
+    
+    # Create position keys for comparison
+    positions_1 = {f"{w.get('position', '')} at {w.get('name', '')}": w for w in work_1}
+    positions_2 = {f"{w.get('position', '')} at {w.get('name', '')}": w for w in work_2}
+    
+    all_positions = set(positions_1.keys()) | set(positions_2.keys())
+    
+    for pos in sorted(all_positions):
+        in_1 = pos in positions_1
+        in_2 = pos in positions_2
+        
+        h1 = len(positions_1[pos].get("highlights", [])) if in_1 else 0
+        h2 = len(positions_2[pos].get("highlights", [])) if in_2 else 0
+        
+        if in_1 and in_2:
+            diff = "=" if h1 == h2 else (f"+{h2-h1}" if h2 > h1 else f"{h2-h1}")
+            result += f"  ✓ {pos}\n"
+            result += f"      Highlights: {h1} vs {h2} ({diff})\n"
+        elif in_1:
+            result += f"  📁1 {pos} ({h1} highlights) - Only in Resume 1\n"
+        else:
+            result += f"  📁2 {pos} ({h2} highlights) - Only in Resume 2\n"
+    
+    # Compare skills
+    skills_1 = resume_1.get("skills", [])
+    skills_2 = resume_2.get("skills", [])
+    
+    result += "\n" + "-" * 70 + "\n"
+    result += "🔧 SKILLS\n"
+    result += "-" * 70 + "\n"
+    result += f"Resume 1: {len(skills_1)} categories | Resume 2: {len(skills_2)} categories\n\n"
+    
+    cats_1 = {s.get("name", ""): s.get("keywords", []) for s in skills_1}
+    cats_2 = {s.get("name", ""): s.get("keywords", []) for s in skills_2}
+    
+    all_cats = set(cats_1.keys()) | set(cats_2.keys())
+    
+    for cat in sorted(all_cats):
+        kw_1 = set(cats_1.get(cat, []))
+        kw_2 = set(cats_2.get(cat, []))
+        
+        if kw_1 == kw_2:
+            result += f"  = {cat}: {len(kw_1)} keywords (identical)\n"
+        else:
+            common_kw = kw_1 & kw_2
+            only_1 = kw_1 - kw_2
+            only_2 = kw_2 - kw_1
+            result += f"  ≠ {cat}:\n"
+            if common_kw:
+                result += f"      Common: {len(common_kw)}\n"
+            if only_1:
+                result += f"      Only R1: {', '.join(list(only_1)[:5])}\n"
+            if only_2:
+                result += f"      Only R2: {', '.join(list(only_2)[:5])}\n"
+    
+    # Compare projects
+    projects_1 = resume_1.get("projects", [])
+    projects_2 = resume_2.get("projects", [])
+    
+    result += "\n" + "-" * 70 + "\n"
+    result += "📂 PROJECTS\n"
+    result += "-" * 70 + "\n"
+    result += f"Resume 1: {len(projects_1)} | Resume 2: {len(projects_2)}\n"
+    
+    proj_names_1 = {p.get("name", "") for p in projects_1}
+    proj_names_2 = {p.get("name", "") for p in projects_2}
+    
+    common_proj = proj_names_1 & proj_names_2
+    only_proj_1 = proj_names_1 - proj_names_2
+    only_proj_2 = proj_names_2 - proj_names_1
+    
+    if common_proj:
+        result += f"\n  ✓ Common: {', '.join(common_proj)}\n"
+    if only_proj_1:
+        result += f"  📁1 Only in R1: {', '.join(only_proj_1)}\n"
+    if only_proj_2:
+        result += f"  📁2 Only in R2: {', '.join(only_proj_2)}\n"
+    
+    # Summary stats
+    result += "\n" + "=" * 70 + "\n"
+    result += "📈 SUMMARY\n"
+    result += "=" * 70 + "\n"
+    
+    total_highlights_1 = sum(len(w.get("highlights", [])) for w in work_1)
+    total_highlights_2 = sum(len(w.get("highlights", [])) for w in work_2)
+    total_skills_1 = sum(len(s.get("keywords", [])) for s in skills_1)
+    total_skills_2 = sum(len(s.get("keywords", [])) for s in skills_2)
+    
+    result += f"\n| Metric           | Resume 1 | Resume 2 | Diff    |\n"
+    result += f"|------------------|----------|----------|---------||\n"
+    result += f"| Key Highlights   | {len(key_highlights_1):>8} | {len(key_highlights_2):>8} | {len(key_highlights_2)-len(key_highlights_1):>+7} |\n"
+    result += f"| Work Positions   | {len(work_1):>8} | {len(work_2):>8} | {len(work_2)-len(work_1):>+7} |\n"
+    result += f"| Total Highlights | {total_highlights_1:>8} | {total_highlights_2:>8} | {total_highlights_2-total_highlights_1:>+7} |\n"
+    result += f"| Skill Categories | {len(skills_1):>8} | {len(skills_2):>8} | {len(skills_2)-len(skills_1):>+7} |\n"
+    result += f"| Total Skills     | {total_skills_1:>8} | {total_skills_2:>8} | {total_skills_2-total_skills_1:>+7} |\n"
+    result += f"| Projects         | {len(projects_1):>8} | {len(projects_2):>8} | {len(projects_2)-len(projects_1):>+7} |\n"
+    
+    return result
+
+
+@tool(
+    name="generate_cover_letter_data",
+    tags=COVER_LETTER_TAGS | {"create"},
+    description="""Generate structured data for a cover letter based on job and experience match.
+    
+    Analyzes the job description and your tailored resume to identify:
+    - Key matching points between your experience and the job
+    - Unique value propositions you bring
+    - Specific examples to highlight
+    - Suggested opening and closing hooks
+    
+    This provides the raw material for crafting a compelling cover letter.
+    
+    Args:
+        application_id: The application ID (must have a saved resume)
+    
+    Returns:
+        Structured cover letter data with talking points and suggestions"""
+)
+def generate_cover_letter_data(application_id: str) -> str:
+    """Generate structured data for cover letter creation."""
+    import json
+    from pathlib import Path
+    
+    app_store = ApplicationStore()
+    
+    # Load the application details
+    try:
+        app = app_store.get_application(application_id)
+    except FileNotFoundError:
+        return f"❌ Application not found: {application_id}"
+    except Exception as e:
+        return f"❌ Error loading application: {str(e)}"
+    
+    # Load the tailored resume
+    try:
+        resume = app_store.load_resume(application_id)
+    except Exception as e:
+        return f"❌ Error loading resume: {str(e)}"
+    
+    if resume is None:
+        return f"❌ No resume found for application: {application_id}\n\nGenerate a tailored resume first using save_tailored_resume()."
+    
+    # Load the job description
+    app_folder = app_store.storage_paths.output_folder / application_id
+    jd_file = app_folder / "job_description.txt"
+    
+    job_description = ""
+    if jd_file.exists():
+        job_description = jd_file.read_text()
+    
+    result = "✉️ COVER LETTER DATA\n" + "=" * 70 + "\n\n"
+    result += f"📁 Application: {application_id}\n"
+    
+    # Extract basics
+    basics = resume.get("basics", {})
+    result += f"👤 Candidate: {basics.get('name', 'N/A')}\n"
+    result += f"📧 Email: {basics.get('email', 'N/A')}\n\n"
+    
+    # Parse company and position from application_id
+    parts = application_id.split("_", 1)
+    company = parts[0] if parts else "the company"
+    position = parts[1].replace("_", " ") if len(parts) > 1 else "this position"
+    
+    result += "-" * 70 + "\n"
+    result += "🎯 KEY MATCHING POINTS\n"
+    result += "-" * 70 + "\n"
+    result += "These are the strongest connections between your experience and the job:\n\n"
+    
+    # Key highlights are the best matches
+    key_highlights = resume.get("keyHighlights", [])
+    if key_highlights:
+        for i, highlight in enumerate(key_highlights[:5], 1):
+            result += f"{i}. {highlight}\n"
+    else:
+        result += "  (No key highlights found - add them to your resume)\n"
+    
+    # Extract top work positions with most highlights
+    result += "\n" + "-" * 70 + "\n"
+    result += "💼 RELEVANT EXPERIENCE TO EMPHASIZE\n"
+    result += "-" * 70 + "\n"
+    
+    work = resume.get("work", [])
+    sorted_work = sorted(work, key=lambda w: len(w.get("highlights", [])), reverse=True)
+    
+    for pos in sorted_work[:3]:
+        pos_name = pos.get("position", "Position")
+        company_name = pos.get("name", "Company")
+        highlights = pos.get("highlights", [])
+        
+        result += f"\n📌 {pos_name} at {company_name}\n"
+        result += f"   Best talking points:\n"
+        for h in highlights[:2]:
+            result += f"   • {h[:100]}{'...' if len(h) > 100 else ''}\n"
+    
+    # Skills that match
+    result += "\n" + "-" * 70 + "\n"
+    result += "🔧 SKILLS TO HIGHLIGHT\n"
+    result += "-" * 70 + "\n"
+    
+    skills = resume.get("skills", [])
+    all_keywords = []
+    for skill in skills:
+        all_keywords.extend(skill.get("keywords", []))
+    
+    if all_keywords:
+        result += "Mention these naturally in your letter:\n"
+        result += "  " + ", ".join(all_keywords[:15])
+        if len(all_keywords) > 15:
+            result += f" (+{len(all_keywords) - 15} more)"
+        result += "\n"
+    
+    # Projects to mention
+    projects = resume.get("projects", [])
+    if projects:
+        result += "\n" + "-" * 70 + "\n"
+        result += "📂 PROJECTS TO SHOWCASE\n"
+        result += "-" * 70 + "\n"
+        
+        for proj in projects[:2]:
+            proj_name = proj.get("name", "Project")
+            proj_desc = proj.get("description", "")[:100]
+            result += f"• {proj_name}: {proj_desc}...\n"
+    
+    # Suggested structure
+    result += "\n" + "=" * 70 + "\n"
+    result += "📝 SUGGESTED LETTER STRUCTURE\n"
+    result += "=" * 70 + "\n"
+    
+    result += """
+1. OPENING HOOK (1-2 sentences)
+   - Lead with your most impressive relevant achievement
+   - Connect it to why you're excited about this role
+   
+   Example: "Having [key achievement], I'm excited about the opportunity to
+   bring this experience to [company] as a [position]."
+
+2. WHY THIS COMPANY (1 paragraph)
+   - What specifically attracts you to the company
+   - How their mission/product aligns with your interests
+   - Reference something specific (recent news, product, values)
+
+3. VALUE PROPOSITION (2 paragraphs)
+   - Paragraph 1: Your most relevant experience
+     • Choose 1-2 key highlights that directly match the JD
+     • Use specific metrics and outcomes
+   - Paragraph 2: Unique qualities you bring
+     • What differentiates you from other candidates
+     • Soft skills or perspectives that add value
+
+4. CLOSING (1 paragraph)
+   - Reiterate enthusiasm
+   - Call to action
+   - Thank them for consideration
+
+"""
+
+    # Word count targets
+    result += "-" * 70 + "\n"
+    result += "📏 GUIDELINES\n"
+    result += "-" * 70 + "\n"
+    result += "• Length: 250-400 words (one page max)\n"
+    result += "• Tone: Professional but personable\n"
+    result += "• Avoid: Repeating resume bullet points verbatim\n"
+    result += "• Focus: Why you + why this company = great fit\n"
+    
+    return result
+
+
+@tool(
+    name="save_cover_letter",
+    tags=COVER_LETTER_TAGS | {"create"},
+    description="""Save a cover letter to an application folder.
+    
+    Args:
+        application_id: The application ID
+        cover_letter_content: The cover letter text content
+    
+    Returns:
+        Confirmation with file path"""
+)
+def save_cover_letter(application_id: str, cover_letter_content: str) -> str:
+    """Save a cover letter to the application folder."""
+    app_store = ApplicationStore()
+    
+    # Verify application exists
+    try:
+        app = app_store.get_application(application_id)
+    except FileNotFoundError:
+        return f"❌ Application not found: {application_id}"
+    
+    # Save the cover letter
+    app_folder = app_store.storage_paths.output_folder / application_id
+    cover_letter_file = app_folder / "cover_letter.txt"
+    
+    try:
+        cover_letter_file.write_text(cover_letter_content)
+    except Exception as e:
+        return f"❌ Error saving cover letter: {str(e)}"
+    
+    word_count = len(cover_letter_content.split())
+    
+    result = f"✅ COVER LETTER SAVED\n" + "=" * 60 + "\n\n"
+    result += f"📁 Application: {application_id}\n"
+    result += f"📄 File: {cover_letter_file}\n"
+    result += f"📊 Word count: {word_count}\n\n"
+    
+    if word_count < 200:
+        result += "⚠️  Cover letter may be too short (< 200 words)\n"
+    elif word_count > 500:
+        result += "⚠️  Cover letter may be too long (> 500 words)\n"
+    else:
+        result += "✓ Length looks good!\n"
+    
+    # List all application files
+    result += "\n📂 Application files:\n"
+    for f in sorted(app_folder.iterdir()):
+        if f.is_file():
+            result += f"   • {f.name}\n"
+    
+    return result
+
+
+@tool(
+    name="get_cover_letter",
+    tags=COVER_LETTER_TAGS | {"read"},
+    description="""Get the cover letter from an application.
+    
+    Args:
+        application_id: The application ID
+    
+    Returns:
+        The cover letter content or a message if not found"""
+)
+def get_cover_letter(application_id: str) -> str:
+    """Get the cover letter from an application folder."""
+    app_store = ApplicationStore()
+    
+    # Verify application exists
+    try:
+        app = app_store.get_application(application_id)
+    except FileNotFoundError:
+        return f"❌ Application not found: {application_id}"
+    
+    app_folder = app_store.storage_paths.output_folder / application_id
+    cover_letter_file = app_folder / "cover_letter.txt"
+    
+    if not cover_letter_file.exists():
+        return f"❌ No cover letter found for: {application_id}\n\nGenerate one using generate_cover_letter_data() first, then save with save_cover_letter()."
+    
+    content = cover_letter_file.read_text()
+    word_count = len(content.split())
+    
+    result = f"✉️ COVER LETTER: {application_id}\n" + "=" * 60 + "\n"
+    result += f"📊 Word count: {word_count}\n\n"
+    result += content
+    
+    return result

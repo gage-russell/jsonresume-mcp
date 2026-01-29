@@ -1,29 +1,75 @@
 """Pending actions tracker - singleton for managing workflow state."""
 
+import json
+from pathlib import Path
 from typing import Optional
 from uuid import uuid4
+from datetime import datetime
 
 from resumejson_mcp.lib.pending_actions.models import (
     PendingAction,
     ActionType,
     ActionPriority,
 )
+from resumejson_mcp.lib.storage.models import StoragePaths
 
 
 class PendingActionsTracker:
     """Singleton tracker for pending actions across the session.
     
     This helps ensure the LLM completes required workflow steps.
+    Now supports persistence to disk for session recovery.
     """
     
     _instance: Optional["PendingActionsTracker"] = None
     _actions: list[PendingAction]
+    _persistence_enabled: bool = True
     
     def __new__(cls) -> "PendingActionsTracker":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._actions = []
+            cls._instance._persistence_enabled = True
+            cls._instance._load_from_disk()
         return cls._instance
+    
+    @property
+    def _persistence_file(self) -> Path:
+        """Get the path to the persistence file."""
+        storage = StoragePaths()
+        return storage.experience_folder / ".pending_actions.json"
+    
+    def _load_from_disk(self) -> None:
+        """Load pending actions from disk if file exists."""
+        try:
+            if self._persistence_file.exists():
+                with open(self._persistence_file, "r") as f:
+                    data = json.load(f)
+                self._actions = [PendingAction(**action) for action in data]
+        except (json.JSONDecodeError, TypeError, ValueError):
+            # Corrupted file, start fresh
+            self._actions = []
+    
+    def _save_to_disk(self) -> None:
+        """Persist pending actions to disk."""
+        if not self._persistence_enabled:
+            return
+        try:
+            self._persistence_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._persistence_file, "w") as f:
+                json.dump(
+                    [action.model_dump(mode="json") for action in self._actions],
+                    f,
+                    indent=2,
+                    default=str,  # Handle datetime serialization
+                )
+        except (OSError, IOError):
+            # Silently fail - persistence is best-effort
+            ...
+    
+    def enable_persistence(self, enabled: bool = True) -> None:
+        """Enable or disable persistence to disk."""
+        self._persistence_enabled = enabled
     
     def add_action(
         self,
@@ -47,6 +93,7 @@ class PendingActionsTracker:
             metadata=metadata or {},
         )
         self._actions.append(action)
+        self._save_to_disk()
         return action
     
     def add_skills_action(
@@ -144,10 +191,12 @@ class PendingActionsTracker:
     def complete_action(self, action_id: str) -> bool:
         """Mark an action as completed."""
         action = self.get_action(action_id)
-        if action:
-            action.mark_completed()
-            return True
-        return False
+        if not action:
+            return False
+        
+        action.mark_completed()
+        self._save_to_disk()
+        return True
     
     def complete_actions_of_type(
         self,
@@ -161,6 +210,8 @@ class PendingActionsTracker:
                 if target_id is None or action.target_id == target_id:
                     action.mark_completed()
                     completed_count += 1
+        if completed_count > 0:
+            self._save_to_disk()
         return completed_count
     
     def get_incomplete_actions(self) -> list[PendingAction]:
@@ -183,6 +234,19 @@ class PendingActionsTracker:
             if not a.completed and a.priority == ActionPriority.CRITICAL
         ]
     
+    def get_actions_for_target(self, target_id: str) -> list[PendingAction]:
+        """Get all incomplete actions for a specific target (work_id, etc.)."""
+        priority_order = {
+            ActionPriority.CRITICAL: 0,
+            ActionPriority.HIGH: 1,
+            ActionPriority.MEDIUM: 2,
+            ActionPriority.LOW: 3,
+        }
+        return sorted(
+            [a for a in self._actions if not a.completed and a.target_id == target_id],
+            key=lambda a: priority_order[a.priority]
+        )
+    
     def has_critical_actions(self) -> bool:
         """Check if there are any incomplete critical actions."""
         return len(self.get_critical_actions()) > 0
@@ -191,12 +255,17 @@ class PendingActionsTracker:
         """Remove all completed actions. Returns count removed."""
         before = len(self._actions)
         self._actions = [a for a in self._actions if not a.completed]
-        return before - len(self._actions)
+        removed = before - len(self._actions)
+        if removed > 0:
+            self._save_to_disk()
+        return removed
     
     def clear_all(self) -> int:
         """Clear all actions. Returns count removed."""
         count = len(self._actions)
         self._actions = []
+        if count > 0:
+            self._save_to_disk()
         return count
     
     def format_summary(self) -> str:

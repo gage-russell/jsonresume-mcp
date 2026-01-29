@@ -1,11 +1,11 @@
 """MCP tools for managing education entries."""
 
-from uuid import uuid4
-
 from fastmcp.tools import tool
 
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
 from resumejson_mcp.lib.experience.models import Education
+from resumejson_mcp.mcp.tags import EDUCATION_TAGS, CREATE, READ, UPDATE, DELETE
+from resumejson_mcp.mcp.experience.shared_helpers import handle_id_collision
 from resumejson_mcp.mcp.experience.v1.education.helpers import (
     format_education_result,
     ensure_education_ids,
@@ -14,6 +14,7 @@ from resumejson_mcp.mcp.experience.v1.education.helpers import (
 
 @tool(
     name="get_all_education",
+    tags=EDUCATION_TAGS | {"read"},
     description="""Get all education entries from experience store.
     
     Returns a formatted list of all education entries with their details.
@@ -54,6 +55,7 @@ Then use add_education to capture the entry."""
 
 @tool(
     name="get_education_by_id",
+    tags=EDUCATION_TAGS | {"read"},
     description="""Get a specific education entry by its mcp-details.id.
     
     Use this to view full details of an education entry.
@@ -77,6 +79,7 @@ Use get_all_education to see existing entries and their IDs."""
 
 @tool(
     name="add_education",
+    tags=EDUCATION_TAGS | {"create"},
     description="""Add a new education entry.
     
     Capture degree, institution, dates, and other educational background.
@@ -104,11 +107,7 @@ def add_education(education: Education) -> str:
     ensure_education_ids(education)
     
     # Check for ID collision and regenerate if needed
-    try:
-        store.get_education_by_id(education.mcp_details.id)
-        education.mcp_details.id = str(uuid4())
-    except ValueError:
-        pass
+    handle_id_collision(education, store.get_education_by_id, ensure_education_ids)
     
     store.add_education(education)
     
@@ -117,6 +116,7 @@ def add_education(education: Education) -> str:
 
 @tool(
     name="update_education",
+    tags=EDUCATION_TAGS | {"update"},
     description="""Update an existing education entry.
     
     Pass the complete Education object with mcp_details.id matching an existing entry.
@@ -145,6 +145,7 @@ RECOVERY:
 
 @tool(
     name="delete_education",
+    tags=EDUCATION_TAGS | {"delete"},
     description="""Delete an education entry by its mcp-details.id.
     
     Args:

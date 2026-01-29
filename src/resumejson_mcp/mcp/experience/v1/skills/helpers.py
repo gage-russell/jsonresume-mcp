@@ -1,16 +1,12 @@
 """Helper functions for skills MCP tools."""
 
-from uuid import uuid4
-
 from resumejson_mcp.lib.experience.models import Skill, MCPSkillDetails
+from resumejson_mcp.mcp.experience.shared_helpers import ensure_mcp_id
 
 
 def ensure_skill_ids(skill: Skill) -> None:
     """Ensure skill has all required IDs set."""
-    if not skill.mcp_details:
-        skill.mcp_details = MCPSkillDetails(id=str(uuid4()))
-    elif not skill.mcp_details.id:
-        skill.mcp_details.id = str(uuid4())
+    ensure_mcp_id(skill, MCPSkillDetails)
 
 
 def detect_missing_info(skill: Skill) -> list[str]:
@@ -20,7 +16,7 @@ def detect_missing_info(skill: Skill) -> list[str]:
     if not skill.name:
         missing.append("No name - specify the category (e.g., 'Languages', 'Frameworks')")
     
-    if not skill.keywords or len(skill.keywords) == 0:
+    if not skill.keywords:
         missing.append("No keywords - list the actual skills in this category")
     
     return missing

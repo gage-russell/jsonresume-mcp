@@ -1,12 +1,12 @@
 """MCP tools for managing work experience."""
 
-from uuid import uuid4
-
 from fastmcp.tools import tool
 
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
 from resumejson_mcp.lib.experience.models import Work, MCPBullet, MCPMajorProject
 from resumejson_mcp.lib.pending_actions import get_tracker, ActionType
+from resumejson_mcp.mcp.experience.shared_helpers import handle_id_collision
+from resumejson_mcp.mcp.tags import WORK_TAGS, CREATE, READ, UPDATE, DELETE, BULK
 from resumejson_mcp.mcp.experience.v1.work.helpers import (
     format_work_result,
     ensure_work_ids,
@@ -15,6 +15,7 @@ from resumejson_mcp.mcp.experience.v1.work.helpers import (
 
 @tool(
     name="get_all_work",
+    tags=WORK_TAGS | {"read", "list"},
     description="""Get all work positions from experience store.
     
     Returns a formatted list of all work positions with their details.
@@ -55,6 +56,7 @@ Then use add_work to capture the position."""
 
 @tool(
     name="get_work_by_id",
+    tags=WORK_TAGS | {"read"},
     description="""Get a specific work position by its mcp-details.id.
     
     Use this to view full details of a position including all bullets and major projects.
@@ -78,6 +80,7 @@ Use get_all_work to see existing positions and their IDs."""
 
 @tool(
     name="add_work",
+    tags=WORK_TAGS | {"create"},
     description="""Add a new work position with all details.
     
     CRITICAL: You must ALWAYS extract and populate bullets and major projects, even if the user
@@ -115,11 +118,7 @@ def add_work(work: Work) -> str:
     ensure_work_ids(work)
     
     # Check for ID collision and regenerate if needed
-    try:
-        store.get_work_by_id(work.mcp_details.id)
-        work.mcp_details.id = str(uuid4())
-    except ValueError:
-        pass
+    handle_id_collision(work, store.get_work_by_id, ensure_work_ids)
     
     store.add_work(work)
     
@@ -128,6 +127,7 @@ def add_work(work: Work) -> str:
 
 @tool(
     name="update_work",
+    tags=WORK_TAGS | {"update"},
     description="""Update an existing work position.
     
     Pass the complete Work object with ALL nested data (bullets, major projects).
@@ -157,6 +157,7 @@ RECOVERY:
 
 @tool(
     name="delete_work",
+    tags=WORK_TAGS | {"delete"},
     description="""Delete a work position by its mcp-details.id.
     
     This permanently removes the position and ALL nested data (bullets, major projects).
@@ -194,6 +195,7 @@ Confirm with user: "I've deleted your {work.position} role at {work.name}. Is th
 
 @tool(
     name="add_bullet_to_work",
+    tags=WORK_TAGS | {"update", "bullets"},
     description="""Add a single bullet point to an existing work position.
     
     Use this for incremental updates when user provides additional accomplishments.
@@ -234,7 +236,73 @@ Total bullets: {new_count}
 
 
 @tool(
+    name="add_bullets_to_work",
+    tags=WORK_TAGS | {"update", "bullets", "bulk"},
+    description="""Add multiple bullet points to an existing work position at once.
+    
+    This is more efficient than calling add_bullet_to_work multiple times
+    when you have several accomplishments to add.
+    
+    Args:
+        work_id: The mcp-details.id of the work position
+        bullets: List of Bullet objects with text and optional tags
+        
+    Example:
+        add_bullets_to_work("my-work-id", [
+            {"text": "Led team of 5 engineers...", "tags": ["leadership", "team"]},
+            {"text": "Reduced latency by 40%...", "tags": ["performance", "optimization"]},
+            {"text": "Built CI/CD pipeline...", "tags": ["devops", "automation"]}
+        ])"""
+)
+def add_bullets_to_work(work_id: str, bullets: list[MCPBullet]) -> str:
+    store = ExperienceStore()
+    tracker = get_tracker()
+    
+    if not bullets:
+        return "❌ No bullets provided to add."
+    
+    try:
+        work = store.get_work_by_id(work_id)
+    except ValueError:
+        return f"✗ ERROR: Work position with ID {work_id} not found.\n\nUse get_all_work to see existing positions and their IDs."
+    
+    # Add each bullet
+    added_count = 0
+    for bullet in bullets:
+        # Ensure bullet has an ID
+        if not bullet.id:
+            bullet.id = str(uuid4())
+        store.add_bullet_to_work(work_id, bullet)
+        added_count += 1
+    
+    # Reload to get updated count
+    work = store.get_work_by_id(work_id)
+    new_count = len(work.mcp_details.bullets) if work.mcp_details else 0
+    
+    # Auto-complete pending add_bullets action for this work position
+    completed = tracker.complete_actions_of_type(ActionType.ADD_BULLETS, work_id)
+    
+    result = f"""✓ {added_count} BULLETS ADDED
+
+Position: {work.position} at {work.name}
+Total bullets: {new_count}
+
+Added:
+"""
+    for bullet in bullets:
+        result += f"  • {bullet.text[:70]}{'...' if len(bullet.text) > 70 else ''}\n"
+    
+    if completed > 0:
+        result += f"\n✓ Completed pending bullets action"
+    
+    result += f"\n{tracker.format_compact()}"
+    
+    return result
+
+
+@tool(
     name="add_major_project_to_work",
+    tags=WORK_TAGS | {"update", "projects"},
     description="""Add a major project to an existing work position.
     
     IMPORTANT: work[].major_projects are contextual information about projects done at this job.

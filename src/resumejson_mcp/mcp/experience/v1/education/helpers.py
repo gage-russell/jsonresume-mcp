@@ -1,16 +1,12 @@
 """Helper functions for education MCP tools."""
 
-from uuid import uuid4
-
 from resumejson_mcp.lib.experience.models import Education, MCPEducationDetails
+from resumejson_mcp.mcp.experience.shared_helpers import ensure_mcp_id
 
 
 def ensure_education_ids(education: Education) -> None:
     """Ensure education has all required IDs set."""
-    if not education.mcp_details:
-        education.mcp_details = MCPEducationDetails(id=str(uuid4()))
-    elif not education.mcp_details.id:
-        education.mcp_details.id = str(uuid4())
+    ensure_mcp_id(education, MCPEducationDetails)
 
 
 def detect_missing_info(education: Education) -> list[str]:
@@ -85,14 +81,12 @@ ID: {education.mcp_details.id if education.mcp_details else 'N/A'}
 """
     
     # Next steps guidance
-    has_missing = len(missing) > 0
-    
     next_steps = f"""\n🎯 NEXT STEPS (REQUIRED):
 1. Show user the captured information above
 2. Ask: "Does this look correct for your education at {education.institution}?"
 """
     
-    if has_missing:
+    if missing:
         next_steps += f"""3. ⚠️  CRITICAL: This education entry is missing important information.
    Ask specific follow-up questions to complete it.
 4. Update the education once you have more information
@@ -101,7 +95,7 @@ ID: {education.mcp_details.id if education.mcp_details else 'N/A'}
         next_steps += f"""3. ✓ This education entry looks complete!
 """
     
-    final_step = 5 if has_missing else 4
+    final_step = 5 if missing else 4
     next_steps += f"""{final_step}. Ask: "Would you like to add another degree or certification, or move on to work experience or skills?"
 """
     
