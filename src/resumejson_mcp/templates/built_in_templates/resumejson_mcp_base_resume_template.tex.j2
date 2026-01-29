@@ -225,4 +225,33 @@
 
 \end{paracol}
 
+% ========== KEY PROJECTS (Full Width) ==========
+\BLOCK{if projects}
+\vspace{6pt}
+\section{Key Projects}
+
+\BLOCK{for project in projects}
+\textbf{\BLOCK{if project.url}\href{\VAR{project.url}}{\VAR{project.name | default('Project') | escape_latex}}\BLOCK{else}\VAR{project.name | default('Project') | escape_latex}\BLOCK{endif}}\BLOCK{if project.start_date or project.end_date} \textit{(\BLOCK{if project.start_date}\VAR{project.start_date}\BLOCK{endif}\BLOCK{if project.end_date} - \VAR{project.end_date}\BLOCK{else}\BLOCK{if project.start_date} - Present\BLOCK{endif}\BLOCK{endif})}\BLOCK{endif}
+
+\BLOCK{if project.description}
+{\small \VAR{project.description | escape_latex}}
+\BLOCK{endif}
+
+\BLOCK{if project.highlights}
+\begin{itemize}
+\BLOCK{for highlight in project.highlights}
+    \item \VAR{highlight | escape_latex}
+\BLOCK{endfor}
+\end{itemize}
+\BLOCK{endif}
+
+\BLOCK{if project.keywords}
+{\small \textit{Technologies:} \BLOCK{for keyword in project.keywords}\VAR{keyword | escape_latex}\BLOCK{if not loop.last}, \BLOCK{endif}\BLOCK{endfor}}
+\BLOCK{endif}
+
+\BLOCK{if not loop.last}\vspace{4pt}\BLOCK{endif}
+
+\BLOCK{endfor}
+\BLOCK{endif}
+
 \end{document}

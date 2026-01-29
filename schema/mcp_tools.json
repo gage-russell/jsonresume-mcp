@@ -1,0 +1,4517 @@
+[
+  {
+    "name": "setup_storage",
+    "title": null,
+    "description": "Initialize or update resumejson-mcp storage directories and save configuration",
+    "inputSchema": {
+      "properties": {
+        "storage_paths": {
+          "description": "Model representing storage paths for the hire-me application.",
+          "properties": {
+            "experience_folder": {
+              "anyOf": [
+                {
+                  "format": "path",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Directory path where experience data (positions, education, skills, projects) is stored"
+            },
+            "output_folder": {
+              "anyOf": [
+                {
+                  "format": "path",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Directory path where generated resumes will be saved"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "storage_paths"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "setup"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "initialize_experience",
+    "title": null,
+    "description": "Initialize a new experience.json file with empty JSON Resume structure",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "setup"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "check_setup_status",
+    "title": null,
+    "description": "Check if resumejson-mcp is configured and verify that all required directories exist",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "read",
+          "setup"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_experience_stats",
+    "title": null,
+    "description": "Get statistics about the experience store.\n    \n    Returns a comprehensive overview of your experience data including:\n    - Total work positions, bullets, and major projects\n    - Date range covered by work history\n    - Skills count by category\n    - Average bullets per position\n    - Coverage analysis and gaps\n    \n    Use this to:\n    - Understand the completeness of your experience data\n    - Identify positions that need more bullets\n    - See skill distribution across categories",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "validate_experience",
+    "title": null,
+    "description": "Validate the experience.json for completeness and consistency.\n    \n    Performs comprehensive validation including:\n    - Required fields check for each section\n    - Duplicate ID detection\n    - Date format validation\n    - Consistency checks between sections\n    - Missing or empty data warnings\n    \n    Returns a detailed report of any issues found.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "validate"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "validate_work_position",
+    "title": null,
+    "description": "Deep validation of a single work position.\n    \n    Performs detailed validation on one work position including:\n    - All required fields check\n    - Bullet quality analysis (length, action verbs, metrics)\n    - Major project completeness\n    - Tag coverage\n    - Date format validation\n    \n    Args:\n        work_id: The mcp-details.id of the work position to validate\n    \n    Returns:\n        Detailed validation report with suggestions for improvement.",
+    "inputSchema": {
+      "properties": {
+        "work_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "work_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "validate",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "list_backups",
+    "title": null,
+    "description": "List all available backups of the experience file.\n    \n    Backups are created automatically before each modification.\n    Only the 10 most recent backups are kept.\n    \n    Returns:\n        List of available backups with timestamps",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "backup",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "restore_from_backup",
+    "title": null,
+    "description": "Restore experience.json from a backup.\n    \n    CAUTION: This will overwrite your current experience data!\n    A backup of the current state is created before restoring.\n    \n    Args:\n        backup_index: Which backup to restore (1 = most recent). \n                      If not provided, restores most recent backup.\n    \n    Returns:\n        Confirmation of restore with summary of restored data",
+    "inputSchema": {
+      "properties": {
+        "backup_index": {
+          "default": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "backup",
+          "update"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "export_to_standard_json_resume",
+    "title": null,
+    "description": "Export experience to standard JSON Resume format.\n    \n    Creates a clean JSON Resume file without mcp-details extensions.\n    Useful for compatibility with other JSON Resume tools.\n    \n    Args:\n        output_filename: Name for the output file (default: resume_export.json)\n    \n    Returns:\n        Path to the exported file",
+    "inputSchema": {
+      "properties": {
+        "output_filename": {
+          "default": "resume_export.json",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "export"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_basics",
+    "title": null,
+    "description": "Get the basics (contact info) from the experience store.\n\nReturns the current contact information including:\n- Name and professional label\n- Email, phone, website\n- Location details\n- Professional summary\n- Social profiles (LinkedIn, GitHub, etc.)\n\nUse this to see what contact information is already set.\n\nNote: Unlike other sections, basics is a single object (not a list).\nThere is only one basics section per resume.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "basics",
+          "experience",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "set_basics",
+    "title": null,
+    "description": "Set or update the basics (contact info) in the experience store.\n\nThis replaces ALL basics information with the provided data.\nAny omitted fields will be cleared.\n\nUse this to:\n- Initialize contact information for the first time\n- Update any contact details\n- Add or update professional summary\n- Add or update social profiles\n\nArgs:\n    basics: Complete Basics object with all contact information\n\nCRITICAL: This is a complete replacement operation. Include ALL fields\nyou want to keep. Any omitted fields will be set to None/empty.\n\nExample structure:\n{\n    \"name\": \"Jane Doe\",\n    \"label\": \"Senior Software Engineer\",\n    \"email\": \"jane@example.com\",\n    \"phone\": \"555-1234\",\n    \"url\": \"https://janedoe.dev\",\n    \"summary\": \"Experienced software engineer with 8+ years building scalable systems...\",\n    \"location\": {\n        \"city\": \"San Francisco\",\n        \"region\": \"CA\",\n        \"country_code\": \"US\"\n    },\n    \"profiles\": [\n        {\n            \"network\": \"LinkedIn\",\n            \"username\": \"janedoe\",\n            \"url\": \"https://linkedin.com/in/janedoe\"\n        },\n        {\n            \"network\": \"GitHub\",\n            \"username\": \"janedoe\",\n            \"url\": \"https://github.com/janedoe\"\n        }\n    ]\n}\n\nWORKFLOW:\n1. Get current basics with get_basics (if updating)\n2. Merge user's changes with existing data\n3. Call this tool with complete Basics object\n4. Verify the update with get_basics",
+    "inputSchema": {
+      "properties": {
+        "basics": {
+          "description": "Basics section from JSON Resume (header/contact info).",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Full name"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Web Developer"
+            },
+            "image": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "URL (as per RFC 3986) to a image in JPEG or PNG format"
+            },
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. thomas@gmail.com"
+            },
+            "phone": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Phone numbers are stored as strings so use any format you like, e.g. 712-117-2923"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "URL (as per RFC 3986) to your website, e.g. personal homepage"
+            },
+            "summary": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Write a short 2-3 sentence biography about yourself"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "description": "Location information from JSON Resume basics section.",
+                  "properties": {
+                    "address": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "To add multiple address lines, use \\n. For example, 1234 Gl\u00fccklichkeit Stra\u00dfe\\nHinterhaus 5. Etage li."
+                    },
+                    "postal_code": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Postal code"
+                    },
+                    "city": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "City"
+                    },
+                    "country_code": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "code as per ISO-3166-1 ALPHA-2, e.g. US, AU, IN"
+                    },
+                    "region": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "The general region where you live. Can be a US state, or a province, for instance."
+                    }
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Location information"
+            },
+            "profiles": {
+              "description": "Specify any number of social networks that you participate in",
+              "items": {
+                "description": "Social media profile from JSON Resume.",
+                "properties": {
+                  "network": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "e.g. Facebook or Twitter"
+                  },
+                  "username": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "e.g. neutralthoughts"
+                  },
+                  "url": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "e.g. http://twitter.example.com/neutralthoughts"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "basics"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "basics",
+          "experience",
+          "update"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "update_basics_field",
+    "title": null,
+    "description": "Update a single field in basics without replacing everything.\n\nThis is a convenience tool for making quick updates to contact info\nwithout needing to provide the entire Basics object.\n\nSupported simple fields:\n- name: Full name\n- label: Professional title (e.g., \"Senior Software Engineer\")\n- email: Email address\n- phone: Phone number\n- url: Website/portfolio URL\n- summary: Professional summary (2-3 sentences)\n- image: Profile image URL\n\nNested fields (pass dict/list):\n- location: {\"city\": \"Austin\", \"region\": \"TX\", \"country_code\": \"US\"}\n- profiles: [{\"network\": \"LinkedIn\", \"username\": \"...\", \"url\": \"...\"}]\n\nArgs:\n    field: Field name to update\n    value: New value for the field\n\nExamples:\n    update_basics_field(\"phone\", \"555-123-4567\")\n    update_basics_field(\"summary\", \"Senior engineer with 10+ years...\")\n    update_basics_field(\"location\", {\"city\": \"Austin\", \"region\": \"TX\"})",
+    "inputSchema": {
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "value": {
+          "title": "Value"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "basics",
+          "experience",
+          "update"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_profile",
+    "title": null,
+    "description": "Add a social profile to basics (LinkedIn, GitHub, etc.).\n\nThis is a convenience tool for adding a single profile without replacing\nall existing profiles.\n\nArgs:\n    network: Network name (e.g., \"LinkedIn\", \"GitHub\", \"Twitter\")\n    username: Your username on the network\n    url: Full URL to your profile\n\nExamples:\n    add_profile(\"LinkedIn\", \"janedoe\", \"https://linkedin.com/in/janedoe\")\n    add_profile(\"GitHub\", \"janedoe\", \"https://github.com/janedoe\")",
+    "inputSchema": {
+      "properties": {
+        "network": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "network",
+        "username",
+        "url"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "basics",
+          "create",
+          "experience"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_all_work",
+    "title": null,
+    "description": "Get all work positions from experience store.\n    \n    Returns a formatted list of all work positions with their details.\n    Use this to see what experience is already captured.\n    \n    When reviewing positions, check if bullets and major projects are populated.\n    If any position is missing these, you should proactively ask the user for more details.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "list",
+          "read",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_work_by_id",
+    "title": null,
+    "description": "Get a specific work position by its mcp-details.id.\n    \n    Use this to view full details of a position including all bullets and major projects.\n    \n    Args:\n        mcp_id: The mcp-details.id of the work position",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "read",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_work",
+    "title": null,
+    "description": "Add a new work position with all details.\n    \n    CRITICAL: You must ALWAYS extract and populate bullets and major projects, even if the user\n    doesn't explicitly provide them in list form. INFER accomplishments from their description:\n    \n    - If user says \"I worked on the payment system\" \u2192 Create a major project for \"Payment System\"\n    - If user mentions \"improved performance\" \u2192 Create a bullet about performance improvements\n    - If they describe responsibilities \u2192 Convert to accomplishment bullets\n    - If they mention technologies \u2192 Capture in major project technologies array\n    \n    DO NOT add a work position with empty bullets and major projects. Always ask follow-up\n    questions to extract at least 2-3 bullets and 1-2 major projects before calling this tool.\n    \n    IMPORTANT DISTINCTION:\n    - work[].mcp_details.major_projects: Contextual information about projects done at this job.\n      These help the AI understand your work deeply to generate tailored resume bullets.\n      They are NOT displayed directly on resumes.\n    \n    - Top-level projects (use add_project): Portfolio/showcase projects that appear directly\n      on resumes (e.g., GitHub repos, side projects, open source contributions).\n    \n    Required fields to populate:\n    - Basic info (position, name/company, dates, location, summary, url)\n    - mcp_details.bullets: List of accomplishments/responsibilities (REQUIRED - minimum 2)\n    - mcp_details.major_projects: Detailed project context (REQUIRED - minimum 1)\n    - mcp_details.tags: Keywords for job matching\n    \n    Args:\n        work: Complete Work object with nested bullets and projects",
+    "inputSchema": {
+      "properties": {
+        "work": {
+          "description": "Work experience entry from JSON Resume with MCP extensions.",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Facebook"
+            },
+            "position": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Software Engineer"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Menlo Park, CA"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Social Media Company"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. http://facebook.example.com"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Start date (ISO 8601 format)"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End date (ISO 8601 format)"
+            },
+            "summary": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Give an overview of your responsibilities at the company"
+            },
+            "highlights": {
+              "description": "Specify multiple accomplishments - AI generates these from mcp_details when tailoring",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP data store for a work position. Contains all accomplishments and context.\n\nAI generates work.highlights from this when tailoring resumes for specific jobs.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this position",
+                      "type": "string"
+                    },
+                    "bullets": {
+                      "description": "All accomplishments at this position with tags. AI filters and selects from these to populate work.highlights.",
+                      "items": {
+                        "description": "A tagged accomplishment. AI uses these to generate work.highlights for specific job applications.",
+                        "properties": {
+                          "id": {
+                            "description": "Unique identifier for this bullet",
+                            "type": "string"
+                          },
+                          "text": {
+                            "description": "The accomplishment text",
+                            "type": "string"
+                          },
+                          "tags": {
+                            "description": "Tags for matching to job descriptions (skills, domains, achievements)",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "text"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "major_projects": {
+                      "description": "Rich context about major projects. Helps AI understand the depth and generate compelling bullets.",
+                      "items": {
+                        "description": "Rich project context that AI uses to understand accomplishments deeply and generate compelling, tailored bullets.\n\nThese are NOT displayed directly on resumes. Instead, the agent uses this\nrich context to generate customized bullet points that match job descriptions.",
+                        "properties": {
+                          "id": {
+                            "description": "Unique identifier for this project",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Project name",
+                            "type": "string"
+                          },
+                          "summary": {
+                            "description": "What the project was and your specific role",
+                            "type": "string"
+                          },
+                          "technologies": {
+                            "description": "Technologies, tools, and frameworks used",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "challenges": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "Problems faced and how you solved them"
+                          },
+                          "outcomes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "Results, metrics, and measurable impact"
+                          },
+                          "team_context": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "Team size, your role, collaboration style"
+                          },
+                          "tags": {
+                            "description": "Tags for job matching",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "summary"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "tags": {
+                      "description": "Position-level tags (skills, industries, role types)",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Comprehensive accomplishment data. AI generates work.highlights from this when tailoring resumes."
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "work"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "experience",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "update_work",
+    "title": null,
+    "description": "Update an existing work position.\n    \n    Pass the complete Work object with ALL nested data (bullets, major projects).\n    This replaces the entire position - any omitted data will be lost.\n    \n    Args:\n        work: Complete Work object with mcp_details.id matching existing position",
+    "inputSchema": {
+      "properties": {
+        "work": {
+          "description": "Work experience entry from JSON Resume with MCP extensions.",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Facebook"
+            },
+            "position": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Software Engineer"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Menlo Park, CA"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Social Media Company"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. http://facebook.example.com"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Start date (ISO 8601 format)"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End date (ISO 8601 format)"
+            },
+            "summary": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Give an overview of your responsibilities at the company"
+            },
+            "highlights": {
+              "description": "Specify multiple accomplishments - AI generates these from mcp_details when tailoring",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP data store for a work position. Contains all accomplishments and context.\n\nAI generates work.highlights from this when tailoring resumes for specific jobs.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this position",
+                      "type": "string"
+                    },
+                    "bullets": {
+                      "description": "All accomplishments at this position with tags. AI filters and selects from these to populate work.highlights.",
+                      "items": {
+                        "description": "A tagged accomplishment. AI uses these to generate work.highlights for specific job applications.",
+                        "properties": {
+                          "id": {
+                            "description": "Unique identifier for this bullet",
+                            "type": "string"
+                          },
+                          "text": {
+                            "description": "The accomplishment text",
+                            "type": "string"
+                          },
+                          "tags": {
+                            "description": "Tags for matching to job descriptions (skills, domains, achievements)",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "text"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "major_projects": {
+                      "description": "Rich context about major projects. Helps AI understand the depth and generate compelling bullets.",
+                      "items": {
+                        "description": "Rich project context that AI uses to understand accomplishments deeply and generate compelling, tailored bullets.\n\nThese are NOT displayed directly on resumes. Instead, the agent uses this\nrich context to generate customized bullet points that match job descriptions.",
+                        "properties": {
+                          "id": {
+                            "description": "Unique identifier for this project",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Project name",
+                            "type": "string"
+                          },
+                          "summary": {
+                            "description": "What the project was and your specific role",
+                            "type": "string"
+                          },
+                          "technologies": {
+                            "description": "Technologies, tools, and frameworks used",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "challenges": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "Problems faced and how you solved them"
+                          },
+                          "outcomes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "Results, metrics, and measurable impact"
+                          },
+                          "team_context": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "Team size, your role, collaboration style"
+                          },
+                          "tags": {
+                            "description": "Tags for job matching",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "summary"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "tags": {
+                      "description": "Position-level tags (skills, industries, role types)",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Comprehensive accomplishment data. AI generates work.highlights from this when tailoring resumes."
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "work"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "update",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "delete_work",
+    "title": null,
+    "description": "Delete a work position by its mcp-details.id.\n    \n    This permanently removes the position and ALL nested data (bullets, major projects).\n    \n    Args:\n        mcp_id: The mcp-details.id of the work position to delete",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "delete",
+          "experience",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_bullet_to_work",
+    "title": null,
+    "description": "Add a single bullet point to an existing work position.\n    \n    Use this for incremental updates when user provides additional accomplishments.\n    For bulk updates, use update_work with all bullets included.\n    \n    Args:\n        work_id: The mcp-details.id of the work position\n        bullet: Bullet object with text and optional tags",
+    "inputSchema": {
+      "properties": {
+        "work_id": {
+          "type": "string"
+        },
+        "bullet": {
+          "description": "A tagged accomplishment. AI uses these to generate work.highlights for specific job applications.",
+          "properties": {
+            "id": {
+              "description": "Unique identifier for this bullet",
+              "type": "string"
+            },
+            "text": {
+              "description": "The accomplishment text",
+              "type": "string"
+            },
+            "tags": {
+              "description": "Tags for matching to job descriptions (skills, domains, achievements)",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "id",
+            "text"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "work_id",
+        "bullet"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "bullets",
+          "experience",
+          "update",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_bullets_to_work",
+    "title": null,
+    "description": "Add multiple bullet points to an existing work position at once.\n    \n    This is more efficient than calling add_bullet_to_work multiple times\n    when you have several accomplishments to add.\n    \n    Args:\n        work_id: The mcp-details.id of the work position\n        bullets: List of Bullet objects with text and optional tags\n        \n    Example:\n        add_bullets_to_work(\"my-work-id\", [\n            {\"text\": \"Led team of 5 engineers...\", \"tags\": [\"leadership\", \"team\"]},\n            {\"text\": \"Reduced latency by 40%...\", \"tags\": [\"performance\", \"optimization\"]},\n            {\"text\": \"Built CI/CD pipeline...\", \"tags\": [\"devops\", \"automation\"]}\n        ])",
+    "inputSchema": {
+      "properties": {
+        "work_id": {
+          "type": "string"
+        },
+        "bullets": {
+          "items": {
+            "description": "A tagged accomplishment. AI uses these to generate work.highlights for specific job applications.",
+            "properties": {
+              "id": {
+                "description": "Unique identifier for this bullet",
+                "type": "string"
+              },
+              "text": {
+                "description": "The accomplishment text",
+                "type": "string"
+              },
+              "tags": {
+                "description": "Tags for matching to job descriptions (skills, domains, achievements)",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "work_id",
+        "bullets"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "bulk",
+          "bullets",
+          "experience",
+          "update",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_major_project_to_work",
+    "title": null,
+    "description": "Add a major project to an existing work position.\n    \n    IMPORTANT: work[].major_projects are contextual information about projects done at this job.\n    They help the AI understand your work deeply to generate tailored resume bullets.\n    They are NOT displayed directly on resumes.\n    \n    For portfolio/showcase projects that appear directly on resumes (GitHub repos, side projects),\n    use add_project instead.\n    \n    Capture detailed project context for resume generation:\n    - name: Project name/title\n    - summary: What it was and your role\n    - technologies: List of tech/tools used\n    - outcomes: Results, metrics, impact\n    - challenges: Problems solved\n    - team_context: Team size, collaboration details\n    - tags: For job matching\n    \n    Args:\n        work_id: The mcp-details.id of the work position\n        project: Complete MCPMajorProject object",
+    "inputSchema": {
+      "properties": {
+        "work_id": {
+          "type": "string"
+        },
+        "project": {
+          "description": "Rich project context that AI uses to understand accomplishments deeply and generate compelling, tailored bullets.\n\nThese are NOT displayed directly on resumes. Instead, the agent uses this\nrich context to generate customized bullet points that match job descriptions.",
+          "properties": {
+            "id": {
+              "description": "Unique identifier for this project",
+              "type": "string"
+            },
+            "name": {
+              "description": "Project name",
+              "type": "string"
+            },
+            "summary": {
+              "description": "What the project was and your specific role",
+              "type": "string"
+            },
+            "technologies": {
+              "description": "Technologies, tools, and frameworks used",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "challenges": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Problems faced and how you solved them"
+            },
+            "outcomes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Results, metrics, and measurable impact"
+            },
+            "team_context": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Team size, your role, collaboration style"
+            },
+            "tags": {
+              "description": "Tags for job matching",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "summary"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "work_id",
+        "project"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "projects",
+          "update",
+          "work"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_all_education",
+    "title": null,
+    "description": "Get all education entries from experience store.\n    \n    Returns a formatted list of all education entries with their details.\n    Use this to see what education background is already captured.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "education",
+          "experience",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_education_by_id",
+    "title": null,
+    "description": "Get a specific education entry by its mcp-details.id.\n    \n    Use this to view full details of an education entry.\n    \n    Args:\n        mcp_id: The mcp-details.id of the education entry",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "education",
+          "experience",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_education",
+    "title": null,
+    "description": "Add a new education entry.\n    \n    Capture degree, institution, dates, and other educational background.\n    \n    Required fields:\n    - institution: School/university name\n    - study_type: Degree type (e.g., Bachelor's, Master's, Ph.D., Certificate)\n    - area: Field of study/major\n    - start_date: When you started (ISO 8601 format: YYYY-MM)\n    - end_date: Graduation date or expected date (ISO 8601 format: YYYY-MM)\n    \n    Optional fields:\n    - score: GPA or grade (e.g., \"3.8/4.0\")\n    - courses: List of relevant courses\n    - url: Link to institution website\n    - mcp_details.tags: Keywords for filtering/matching\n    \n    Args:\n        education: Complete Education object",
+    "inputSchema": {
+      "properties": {
+        "education": {
+          "description": "Education entry from JSON Resume.",
+          "properties": {
+            "institution": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Massachusetts Institute of Technology"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. http://facebook.example.com"
+            },
+            "area": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Arts"
+            },
+            "study_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Bachelor"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Start date (ISO 8601 format)"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End date (ISO 8601 format)"
+            },
+            "score": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "grade point average, e.g. 3.67/4.0"
+            },
+            "courses": {
+              "description": "List notable courses/subjects",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP metadata for an education entry.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this education entry",
+                      "type": "string"
+                    },
+                    "tags": {
+                      "description": "Tags for filtering/matching",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "MCP metadata for education management"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "education"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "education",
+          "experience"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "update_education",
+    "title": null,
+    "description": "Update an existing education entry.\n    \n    Pass the complete Education object with mcp_details.id matching an existing entry.\n    \n    Args:\n        education: Complete Education object with mcp_details.id",
+    "inputSchema": {
+      "properties": {
+        "education": {
+          "description": "Education entry from JSON Resume.",
+          "properties": {
+            "institution": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Massachusetts Institute of Technology"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. http://facebook.example.com"
+            },
+            "area": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Arts"
+            },
+            "study_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Bachelor"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Start date (ISO 8601 format)"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End date (ISO 8601 format)"
+            },
+            "score": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "grade point average, e.g. 3.67/4.0"
+            },
+            "courses": {
+              "description": "List notable courses/subjects",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP metadata for an education entry.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this education entry",
+                      "type": "string"
+                    },
+                    "tags": {
+                      "description": "Tags for filtering/matching",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "MCP metadata for education management"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "education"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "education",
+          "experience",
+          "update"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "delete_education",
+    "title": null,
+    "description": "Delete an education entry by its mcp-details.id.\n    \n    Args:\n        mcp_id: The mcp-details.id of the education entry to delete",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "delete",
+          "education",
+          "experience"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_all_skills",
+    "title": null,
+    "description": "Get all skills from the experience store.\n\nReturns a formatted list of all skill categories with their associated skills.\nUse this to see what skills are already captured.\n\nWhen reviewing skills, check if the categories are well-organized and comprehensive.\nIf you notice gaps or need clarification, ask the user about missing skills.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "read",
+          "skills"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_skill_by_id",
+    "title": null,
+    "description": "Get a specific skill category by its mcp-details.id.\n\nUse this to view full details of a skill category including:\n- Category name and level\n- All skills in the category\n- Tags for job matching\n\nArgs:\n    mcp_id: The mcp-details.id of the skill category",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "read",
+          "skills"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_skill",
+    "title": null,
+    "description": "Add a single skill category to the experience store.\n\nUse this when adding one skill category at a time, or when you need to capture\ndetailed information about a specific category.\n\nArgs:\n    skill: Complete Skill object with name, keywords, and optional level/tags\n\nCRITICAL: A \"skill\" in this context is a CATEGORY (e.g., \"Languages\", \"Frameworks\").\nThe actual skills go in the keywords array (e.g., [\"Python\", \"JavaScript\"]).\n\nExample structure:\n{\n    \"name\": \"Programming Languages\",\n    \"keywords\": [\"Python\", \"JavaScript\", \"TypeScript\", \"Go\"],\n    \"level\": \"Expert\",\n    \"mcp_details\": {\n        \"tags\": [\"backend\", \"frontend\", \"systems\"]\n    }\n}",
+    "inputSchema": {
+      "properties": {
+        "skill": {
+          "description": "Skill entry from JSON Resume with MCP extensions.",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Web Development"
+            },
+            "level": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Master"
+            },
+            "keywords": {
+              "description": "List some keywords pertaining to this skill",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP metadata for a skill entry.\n\nNote: Use the standard Skill.name field for the category (e.g., 'Languages', 'Frameworks').\nUse Skill.keywords for the actual skills in that category.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this skill",
+                      "type": "string"
+                    },
+                    "tags": {
+                      "description": "Tags for filtering/matching",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "MCP metadata for organizing and filtering skills"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "skill"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "experience",
+          "skills"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_skills",
+    "title": null,
+    "description": "Add multiple skill categories at once (bulk operation).\n\nThis is the PREFERRED tool when initially capturing skills, as users typically\nhave multiple categories to add (Languages, Frameworks, Tools, etc.).\n\nUse this to efficiently add several skill categories in one operation.\n\nArgs:\n    skills: List of Skill objects to add\n\nCRITICAL: A \"skill\" in this context is a CATEGORY (e.g., \"Languages\", \"Databases\").\nThe actual skills go in each category's keywords array.\n\nExample structure:\n[\n    {\n        \"name\": \"Programming Languages\",\n        \"keywords\": [\"Python\", \"JavaScript\", \"TypeScript\"],\n        \"level\": \"Expert\"\n    },\n    {\n        \"name\": \"Web Frameworks\",\n        \"keywords\": [\"React\", \"Django\", \"FastAPI\"],\n        \"level\": \"Advanced\"\n    },\n    {\n        \"name\": \"Databases\",\n        \"keywords\": [\"PostgreSQL\", \"MongoDB\", \"Redis\"]\n    }\n]\n\nWORKFLOW:\n1. Ask user about their main skill areas\n2. Group skills by logical categories\n3. Use this tool to add all categories at once\n4. Follow up for any missing categories",
+    "inputSchema": {
+      "properties": {
+        "skills": {
+          "items": {
+            "description": "Skill entry from JSON Resume with MCP extensions.",
+            "properties": {
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "e.g. Web Development"
+              },
+              "level": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "e.g. Master"
+              },
+              "keywords": {
+                "description": "List some keywords pertaining to this skill",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "mcp-details": {
+                "anyOf": [
+                  {
+                    "description": "MCP metadata for a skill entry.\n\nNote: Use the standard Skill.name field for the category (e.g., 'Languages', 'Frameworks').\nUse Skill.keywords for the actual skills in that category.",
+                    "properties": {
+                      "id": {
+                        "description": "Unique identifier for this skill",
+                        "type": "string"
+                      },
+                      "tags": {
+                        "description": "Tags for filtering/matching",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "MCP metadata for organizing and filtering skills"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "skills"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "bulk",
+          "create",
+          "experience",
+          "skills"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "update_skill",
+    "title": null,
+    "description": "Update an existing skill category.\n\nPass the complete Skill object with mcp_details.id matching the existing category.\nThis replaces the entire category - any omitted data will be lost.\n\nUse this to:\n- Add more skills to a category's keywords\n- Update skill level\n- Reorganize skills into different categories\n- Update tags for better job matching\n\nArgs:\n    skill: Complete Skill object with mcp_details.id matching existing category",
+    "inputSchema": {
+      "properties": {
+        "skill": {
+          "description": "Skill entry from JSON Resume with MCP extensions.",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Web Development"
+            },
+            "level": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. Master"
+            },
+            "keywords": {
+              "description": "List some keywords pertaining to this skill",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP metadata for a skill entry.\n\nNote: Use the standard Skill.name field for the category (e.g., 'Languages', 'Frameworks').\nUse Skill.keywords for the actual skills in that category.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this skill",
+                      "type": "string"
+                    },
+                    "tags": {
+                      "description": "Tags for filtering/matching",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "MCP metadata for organizing and filtering skills"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "skill"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "skills",
+          "update"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "delete_skill",
+    "title": null,
+    "description": "Delete a skill category by its mcp-details.id.\n\nThis permanently removes the category and all its associated skills.\n\nCAUTION: This action cannot be undone. Consider updating instead if you just\nwant to modify the category or reorganize skills.\n\nArgs:\n    mcp_id: The mcp-details.id of the skill category to delete",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "delete",
+          "experience",
+          "skills"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_all_projects",
+    "title": null,
+    "description": "Get all portfolio projects from experience store.\n    \n    Portfolio projects are showcased work that appears directly on resumes.\n    These are different from work[].major_projects which are contextual information\n    used to generate tailored resume bullets.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "projects",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_project_by_id",
+    "title": null,
+    "description": "Get a specific portfolio project by its mcp-details.id.\n    \n    Args:\n        mcp_id: The mcp-details.id of the project",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "projects",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_project",
+    "title": null,
+    "description": "Add a new portfolio project.\n    \n    Portfolio projects are showcase work that appears directly on resumes\n    (e.g., GitHub repos, side projects, open source contributions).\n    \n    These are DIFFERENT from work[].major_projects which are contextual information\n    about projects done at jobs. Those major_projects help the AI generate tailored\n    resume bullets but don't appear directly on resumes.\n    \n    Required fields:\n    - name: Clear project title\n    - description: Brief summary (2-3 sentences)\n    - highlights: List of key accomplishments or features (3-5 recommended)\n    - keywords: Technologies/tools used\n    - url: Live demo, GitHub repo, or documentation\n    - mcp_details.one_liner: Ultra-brief description for tight layouts\n    - mcp_details.tags: For filtering/matching to job descriptions\n    \n    Args:\n        project: Complete Project object",
+    "inputSchema": {
+      "properties": {
+        "project": {
+          "description": "Project entry from JSON Resume with MCP extensions.",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. The World Wide Web"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Short summary of project. e.g. Collated works of 2017."
+            },
+            "highlights": {
+              "description": "Specify multiple features",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "keywords": {
+              "description": "Specify special elements involved",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Start date (ISO 8601 format)"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End date (ISO 8601 format)"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Project URL"
+            },
+            "roles": {
+              "description": "Specify your role on this project or in company",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Specify the relevant company/entity affiliations e.g. 'greenpeace', 'corporationXYZ'"
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. 'volunteering', 'presentation', 'talk', 'application', 'conference'"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP metadata for a project entry.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this project",
+                      "type": "string"
+                    },
+                    "one_liner": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Brief one-line description for resume"
+                    },
+                    "tags": {
+                      "description": "Tags for filtering/matching",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "MCP metadata for project selection and display"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "experience",
+          "projects"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_projects",
+    "title": null,
+    "description": "Add multiple portfolio projects at once.\n    \n    Use this for bulk adding when the user provides multiple projects.\n    \n    Args:\n        projects: List of Project objects",
+    "inputSchema": {
+      "properties": {
+        "projects": {
+          "items": {
+            "description": "Project entry from JSON Resume with MCP extensions.",
+            "properties": {
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "e.g. The World Wide Web"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Short summary of project. e.g. Collated works of 2017."
+              },
+              "highlights": {
+                "description": "Specify multiple features",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "keywords": {
+                "description": "Specify special elements involved",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "start_date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Start date (ISO 8601 format)"
+              },
+              "end_date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "End date (ISO 8601 format)"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Project URL"
+              },
+              "roles": {
+                "description": "Specify your role on this project or in company",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "entity": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Specify the relevant company/entity affiliations e.g. 'greenpeace', 'corporationXYZ'"
+              },
+              "type": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "e.g. 'volunteering', 'presentation', 'talk', 'application', 'conference'"
+              },
+              "mcp-details": {
+                "anyOf": [
+                  {
+                    "description": "MCP metadata for a project entry.",
+                    "properties": {
+                      "id": {
+                        "description": "Unique identifier for this project",
+                        "type": "string"
+                      },
+                      "one_liner": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "Brief one-line description for resume"
+                      },
+                      "tags": {
+                        "description": "Tags for filtering/matching",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "MCP metadata for project selection and display"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "projects"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "bulk",
+          "create",
+          "experience",
+          "projects"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "update_project",
+    "title": null,
+    "description": "Update an existing portfolio project.\n    \n    Pass the complete Project object with mcp_details.id matching an existing project.\n    \n    Args:\n        project: Complete Project object with mcp_details.id",
+    "inputSchema": {
+      "properties": {
+        "project": {
+          "description": "Project entry from JSON Resume with MCP extensions.",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. The World Wide Web"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Short summary of project. e.g. Collated works of 2017."
+            },
+            "highlights": {
+              "description": "Specify multiple features",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "keywords": {
+              "description": "Specify special elements involved",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Start date (ISO 8601 format)"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End date (ISO 8601 format)"
+            },
+            "url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Project URL"
+            },
+            "roles": {
+              "description": "Specify your role on this project or in company",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Specify the relevant company/entity affiliations e.g. 'greenpeace', 'corporationXYZ'"
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "e.g. 'volunteering', 'presentation', 'talk', 'application', 'conference'"
+            },
+            "mcp-details": {
+              "anyOf": [
+                {
+                  "description": "MCP metadata for a project entry.",
+                  "properties": {
+                    "id": {
+                      "description": "Unique identifier for this project",
+                      "type": "string"
+                    },
+                    "one_liner": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Brief one-line description for resume"
+                    },
+                    "tags": {
+                      "description": "Tags for filtering/matching",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "MCP metadata for project selection and display"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "experience",
+          "projects",
+          "update"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "delete_project",
+    "title": null,
+    "description": "Delete a portfolio project by its mcp-details.id.\n    \n    Args:\n        mcp_id: The mcp-details.id of the project to delete",
+    "inputSchema": {
+      "properties": {
+        "mcp_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mcp_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "delete",
+          "experience",
+          "projects"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "list_templates",
+    "title": null,
+    "description": "List all available resume templates.\n    \n    Returns:\n        Formatted list of template names",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "read",
+          "templates"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_template_content",
+    "title": null,
+    "description": "Read the raw content of a template file.\n    \n    Args:\n        template_name: Name of the template. If None, uses default template.\n        \n    Returns:\n        Raw template content",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "read",
+          "templates"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "create_template",
+    "title": null,
+    "description": "Create a new resume template.\n    \n    Args:\n        template_name: Name for the new template (will add .tex.j2 if not present)\n        content: Template content (Jinja2 + LaTeX)\n        \n    Returns:\n        Success message with template path",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "template_name",
+        "content"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "templates"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "update_template",
+    "title": null,
+    "description": "Update an existing resume template.\n    \n    Args:\n        template_name: Name of the template to update\n        content: New template content\n        \n    Returns:\n        Success message",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "template_name",
+        "content"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "templates",
+          "update"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "delete_template",
+    "title": null,
+    "description": "Delete a resume template.\n    \n    Args:\n        template_name: Name of the template to delete\n        \n    Returns:\n        Success or error message",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "template_name"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "delete",
+          "templates"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "render_resume",
+    "title": null,
+    "description": "Render a resume using the current experience data and a template.\n    \n    This reads your experience data and renders it with the specified template,\n    saving the result to the output folder.\n    \n    Args:\n        template_name: Name of the template to use. If None, uses default template.\n        output_filename: Name for the output file (default: resume.tex)\n        \n    Returns:\n        Success message with output path",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "output_filename": {
+          "default": "resume.tex",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "export",
+          "templates"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "preview_render",
+    "title": null,
+    "description": "Preview what the rendered resume would look like (returns LaTeX code).\n    \n    This renders the template with your current experience data but returns\n    the LaTeX code instead of saving to a file.\n    \n    Args:\n        template_name: Name of the template to use. If None, uses default template.\n        \n    Returns:\n        Rendered LaTeX code (first 2000 characters)",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "read",
+          "templates"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "validate_template",
+    "title": null,
+    "description": "Validate a template for syntax errors and required variables.\n    \n    Checks:\n    - Jinja2 syntax errors (blocks, variables, filters)\n    - Required resume variables are used (basics, work, skills, etc.)\n    - LaTeX escape filter usage\n    - Common template issues\n    \n    Args:\n        template_name: Name of the template to validate. If None, validates default.\n    \n    Returns:\n        Validation report with any issues found",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "templates",
+          "validate"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "preview_template_with_sample_data",
+    "title": null,
+    "description": "Render a template with sample data to preview the layout.\n    \n    Uses realistic sample resume data to show how the template will look\n    without needing your actual experience data. Great for testing new\n    templates or checking layout before using with real data.\n    \n    Args:\n        template_name: Name of the template to preview. If None, uses default.\n    \n    Returns:\n        Rendered LaTeX preview (first 3000 characters)",
+    "inputSchema": {
+      "properties": {
+        "template_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "read",
+          "templates"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "create_job_application",
+    "title": null,
+    "description": "Create a new job application folder with job description.\n    \n    This is the first step in the resume generation workflow:\n    1. Create application folder with job description \u2190 YOU ARE HERE\n    2. AI generates tailored resume from experience data\n    3. Save tailored resume to application\n    4. Render to LaTeX and compile to PDF\n    \n    Args:\n        company: Company name\n        position: Job position/title\n        job_description: The full job description text\n        \n    Returns:\n        Success message with application ID and next steps",
+    "inputSchema": {
+      "properties": {
+        "company": {
+          "type": "string"
+        },
+        "position": {
+          "type": "string"
+        },
+        "job_description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "company",
+        "position",
+        "job_description"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "create",
+          "resume-workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_experience_for_tailoring",
+    "title": null,
+    "description": "Get the user's full experience data for tailoring a resume.\n    \n    Returns the complete experience.json content which includes:\n    - All work positions with mcp-details (bullets, major_projects, tags)\n    - All skills with categories\n    - All projects\n    - Education and basics\n    \n    CRITICAL - HOW TO USE THIS DATA:\n    \n    1. PREFER EXISTING BULLETS - Use mcp-details.bullets VERBATIM\n       The user has carefully crafted these accomplishments.\n       Only modify if you are CERTAIN you can improve them.\n    \n    2. SELECT, DON'T REWRITE - Pick the most relevant bullets for each position.\n       The work[].highlights should mostly be existing bullets selected for relevance.\n    \n    3. COVERAGE MATTERS - Include 70%+ of positions with 4-5 highlights each.\n       Aim for 60%+ overall bullet coverage. More is better.\n    \n    4. USE MAJOR_PROJECTS FOR CONTEXT - Read them to understand the work,\n       but prefer the existing bullet text over creating new content.\n    \n    5. WHEN TO MODIFY (rare):\n       - Adding a specific JD keyword that's genuinely missing\n       - Combining two related bullets into one stronger statement\n       - Adding quantification when you know the specific metric\n    \n    Returns:\n        JSON string of complete experience data",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "read",
+          "resume-workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "preview_tailored_resume",
+    "title": null,
+    "description": "Preview and validate a tailored resume BEFORE saving.\n    \n    CRITICAL: Always call this tool before save_tailored_resume to verify:\n    - All work positions have 3-5 highlights\n    - Content coverage is sufficient\n    - No positions are missing highlights\n    \n    This tool validates the resume and shows coverage statistics without saving.\n    If validation fails, fix the issues before calling save_tailored_resume.\n    \n    Args:\n        resume_data: The tailored resume as a dict (JSON Resume format)\n        \n    Returns:\n        Validation results with coverage statistics",
+    "inputSchema": {
+      "properties": {
+        "resume_data": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "required": [
+        "resume_data"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "resume-workflow",
+          "validate"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "save_tailored_resume",
+    "title": null,
+    "description": "Save a tailored resume to an application folder.\n    \n    IMPORTANT: Call preview_tailored_resume() first to validate content!\n    \n    The resume_data should be a clean JSON Resume object with:\n    - basics: Contact information  \n    - keyHighlights: 3-5 top achievements matching the job (REQUIRED!)\n    - work: Selected positions with tailored highlights (NOT mcp-details)\n    - skills: Selected relevant skills\n    - projects: Selected relevant projects\n    - education: Education entries\n    \n    REQUIREMENTS:\n    - keyHighlights: REQUIRED - 3-5 top achievements tailored to the job description\n    - Each work position MUST have at least 3 highlights\n    - Highlights should NOT be empty\n    - Include relevant skills and projects\n    \n    DO NOT include mcp-details fields - they will be stripped automatically.\n    The work[].highlights should contain the tailored bullet points.\n    \n    Args:\n        application_id: The application ID from create_job_application\n        resume_data: The tailored resume as a dict (JSON Resume format)\n        \n    Returns:\n        Success message with file path and coverage stats",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        },
+        "resume_data": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "required": [
+        "application_id",
+        "resume_data"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "create",
+          "resume-workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "render_and_compile",
+    "title": null,
+    "description": "Render resume to LaTeX and compile to PDF.\n    \n    This is the final step: takes the resume.json, renders it with the\n    Jinja2 template, and compiles to PDF using pdflatex.\n    \n    Args:\n        application_id: The application ID\n        template_name: Template to use (default: default.tex.j2)\n        \n    Returns:\n        Success message with PDF path, or error details",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        },
+        "template_name": {
+          "default": "default.tex.j2",
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "export",
+          "resume-workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "list_applications",
+    "title": null,
+    "description": "List all job applications.\n    \n    Returns:\n        Formatted list of all applications with their status",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_application",
+    "title": null,
+    "description": "Get details of a specific application.\n    \n    Args:\n        application_id: The application ID\n        \n    Returns:\n        Application details including job description and status",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_application_resume",
+    "title": null,
+    "description": "Get the tailored resume.json content from an application.\n    \n    Args:\n        application_id: The application ID\n        \n    Returns:\n        The resume.json content as formatted JSON",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "delete_application",
+    "title": null,
+    "description": "Delete an application and all its files.\n    \n    Args:\n        application_id: The application to delete\n        \n    Returns:\n        Success or error message",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "delete"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "compare_resumes",
+    "title": null,
+    "description": "Compare two tailored resumes to show differences.\n    \n    Useful for understanding how resumes were customized for different jobs\n    or for reviewing variations in how you've presented your experience.\n    \n    Compares:\n    - Key highlights\n    - Work positions included\n    - Highlights per position\n    - Skills included\n    - Projects included\n    \n    Args:\n        application_id_1: First application ID\n        application_id_2: Second application ID\n    \n    Returns:\n        Side-by-side comparison of the two resumes",
+    "inputSchema": {
+      "properties": {
+        "application_id_1": {
+          "type": "string"
+        },
+        "application_id_2": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id_1",
+        "application_id_2"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "generate_cover_letter_data",
+    "title": null,
+    "description": "Generate structured data for a cover letter based on job and experience match.\n    \n    Analyzes the job description and your tailored resume to identify:\n    - Key matching points between your experience and the job\n    - Unique value propositions you bring\n    - Specific examples to highlight\n    - Suggested opening and closing hooks\n    \n    This provides the raw material for crafting a compelling cover letter.\n    \n    Args:\n        application_id: The application ID (must have a saved resume)\n    \n    Returns:\n        Structured cover letter data with talking points and suggestions",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "cover-letter",
+          "create"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "save_cover_letter",
+    "title": null,
+    "description": "Save a cover letter to an application folder.\n    \n    Args:\n        application_id: The application ID\n        cover_letter_content: The cover letter text content\n    \n    Returns:\n        Confirmation with file path",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        },
+        "cover_letter_content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id",
+        "cover_letter_content"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "cover-letter",
+          "create"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_cover_letter",
+    "title": null,
+    "description": "Get the cover letter from an application.\n    \n    Args:\n        application_id: The application ID\n    \n    Returns:\n        The cover letter content or a message if not found",
+    "inputSchema": {
+      "properties": {
+        "application_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "applications",
+          "cover-letter",
+          "read"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_pending_todos",
+    "title": null,
+    "description": "Get all pending actions that need to be completed.\n    \n    IMPORTANT: Call this tool frequently to check if you have pending work to complete.\n    Pending actions are created automatically when you:\n    - Add work positions (missing skills, projects, bullets are tracked)\n    - Perform operations that require follow-up\n    \n    Priority levels:\n    - CRITICAL: Must complete before moving on (e.g., missing bullets/projects)\n    - HIGH: Should complete soon (e.g., adding extracted skills)\n    - MEDIUM: Can defer but shouldn't forget (e.g., portfolio projects)\n    - LOW: Nice to have\n    \n    Returns:\n        Summary of all pending actions grouped by priority",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "read",
+          "todos",
+          "workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "complete_todo",
+    "title": null,
+    "description": "Mark a pending action as completed.\n    \n    Call this after you've completed an action to remove it from the pending list.\n    \n    Args:\n        action_id: The ID of the action to mark complete\n        \n    Returns:\n        Confirmation and remaining pending actions count",
+    "inputSchema": {
+      "properties": {
+        "action_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "todos",
+          "update",
+          "workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "complete_todos_of_type",
+    "title": null,
+    "description": "Mark all pending actions of a specific type as completed.\n    \n    Useful when you've completed a batch of related actions (e.g., added all missing skills).\n    \n    Args:\n        action_type: One of: add_skills, add_major_project, add_bullets, add_project, \n                     confirm_with_user, extract_more_info, update_work, delete_duplicate\n        target_id: Optional - only complete actions for this specific target (work_id, etc.)\n        \n    Returns:\n        Count of actions completed and remaining pending actions",
+    "inputSchema": {
+      "properties": {
+        "action_type": {
+          "type": "string"
+        },
+        "target_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "action_type"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "bulk",
+          "todos",
+          "update",
+          "workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "clear_completed_todos",
+    "title": null,
+    "description": "Remove all completed actions from the tracker.\n    \n    Use this to clean up the action list after a batch of work.\n    \n    Returns:\n        Count of actions cleared",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "delete",
+          "todos",
+          "workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "add_custom_todo",
+    "title": null,
+    "description": "Add a custom pending action for tracking.\n    \n    Use this to add your own reminders or tasks that should be tracked\n    alongside the automatically generated pending actions.\n    \n    Args:\n        description: What needs to be done\n        priority: One of: critical, high, medium, low (default: medium)\n        target_id: Optional - ID of related entity (work_id, project_id, etc.)\n        \n    Returns:\n        Confirmation with the new action details",
+    "inputSchema": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "priority": {
+          "default": "medium",
+          "type": "string"
+        },
+        "target_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "description"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "create",
+          "todos",
+          "workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_pending_todos_for_work",
+    "title": null,
+    "description": "Get pending actions specific to a work position.\n    \n    Filters pending actions to show only those related to a specific work ID.\n    Useful for focusing on completing tasks for one position at a time.\n    \n    Args:\n        work_id: The mcp-details.id of the work position\n        \n    Returns:\n        Pending actions for that specific position",
+    "inputSchema": {
+      "properties": {
+        "work_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "work_id"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "read",
+          "todos",
+          "workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "analyze_job_description",
+    "title": null,
+    "description": "Analyze a job description to extract key requirements and keywords.\n    \n    This tool parses a job description to identify:\n    - Required skills and technologies\n    - Preferred/nice-to-have skills\n    - Key responsibilities\n    - Experience requirements\n    - Keywords for ATS optimization\n    \n    Use this BEFORE tailoring a resume to understand what to emphasize.\n    \n    Args:\n        job_description: The full job description text\n        \n    Returns:\n        Structured analysis of the job requirements",
+    "inputSchema": {
+      "properties": {
+        "job_description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_description"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": [
+          "analyze",
+          "resume-workflow",
+          "workflow"
+        ]
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "search_experience",
+    "title": null,
+    "description": "Full-text search across all experience data.\n    \n    Searches through:\n    - Work: position titles, company names, summaries, bullet text, major project content\n    - Skills: category names and keywords\n    - Projects: names, descriptions, highlights\n    - Education: institution, area of study, degree\n    \n    Args:\n        query: Search term (case-insensitive)\n        sections: Optional list to limit search - [\"work\", \"skills\", \"projects\", \"education\"]\n                  If not provided, searches all sections.\n    \n    Returns:\n        Formatted list of matching items with context",
+    "inputSchema": {
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "sections": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": []
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "filter_work_by_tags",
+    "title": null,
+    "description": "Filter work positions by tags.\n    \n    Tags can be skills, technologies, domains, or any labels added to work positions.\n    Searches both position-level tags and project-level tags.\n    \n    Args:\n        tags: List of tags to filter by\n        match_all: If True, position must have ALL tags. If False (default), position must have ANY tag.\n    \n    Returns:\n        Filtered list of work positions with matching tags highlighted",
+    "inputSchema": {
+      "properties": {
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "match_all": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "tags"
+      ],
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": []
+      }
+    },
+    "execution": null
+  },
+  {
+    "name": "get_tool_metrics",
+    "title": null,
+    "description": "Get usage metrics for all tools. Only available if RESUMEJSON_MCP_METRICS=1 is set.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object",
+      "x-fastmcp-wrap-result": true
+    },
+    "icons": null,
+    "annotations": null,
+    "meta": {
+      "fastmcp": {
+        "tags": []
+      }
+    },
+    "execution": null
+  }
+]

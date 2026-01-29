@@ -1,34 +1,26 @@
 """Helper functions for work MCP tools."""
 
-from uuid import uuid4
-
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
-from resumejson_mcp.lib.experience.models import Work, MCPBullet, MCPMajorProject
+from resumejson_mcp.lib.experience.models import Work, MCPBullet, MCPMajorProject, MCPWorkDetails
 from resumejson_mcp.lib.pending_actions import (
     get_tracker,
     ActionType,
     ActionPriority,
+)
+from resumejson_mcp.mcp.experience.shared_helpers import (
+    ensure_mcp_id,
+    ensure_nested_ids,
 )
 
 
 def ensure_work_ids(work: Work) -> None:
     """Ensure work and all nested items have IDs."""
     # Ensure main mcp_details.id
-    if not work.mcp_details:
-        from resumejson_mcp.lib.experience.models import MCPWorkDetails
-        work.mcp_details = MCPWorkDetails(id=str(uuid4()))
-    elif not work.mcp_details.id:
-        work.mcp_details.id = str(uuid4())
+    ensure_mcp_id(work, MCPWorkDetails)
     
-    # Ensure bullet IDs
-    for bullet in work.mcp_details.bullets:
-        if not bullet.id:
-            bullet.id = str(uuid4())
-    
-    # Ensure major project IDs
-    for project in work.mcp_details.major_projects:
-        if not project.id:
-            project.id = str(uuid4())
+    # Ensure nested IDs for bullets and major projects
+    ensure_nested_ids(work.mcp_details.bullets)
+    ensure_nested_ids(work.mcp_details.major_projects)
 
 
 def format_bullets(bullets: list[MCPBullet]) -> str:
@@ -36,12 +28,10 @@ def format_bullets(bullets: list[MCPBullet]) -> str:
     if not bullets:
         return "  • No bullets captured yet"
     
-    lines = []
-    for bullet in bullets:
-        tags_str = f" [{', '.join(bullet.tags)}]" if bullet.tags else ""
-        lines.append(f"  • {bullet.text}{tags_str}")
-    
-    return "\n".join(lines)
+    return "\n".join(
+        f"  • {bullet.text}{f' [{', '.join(bullet.tags)}]' if bullet.tags else ''}"
+        for bullet in bullets
+    )
 
 
 def format_major_projects(projects: list[MCPMajorProject]) -> str:
@@ -55,19 +45,17 @@ def format_major_projects(projects: list[MCPMajorProject]) -> str:
     if not projects:
         return "  → No major projects captured yet"
     
-    lines = []
-    for project in projects:
+    def format_project(project: MCPMajorProject) -> list[str]:
         tech_str = f" [{', '.join(project.technologies)}]" if project.technologies else ""
-        lines.append(f"  → {project.name}{tech_str}")
-        
+        result = [f"  → {project.name}{tech_str}"]
         if project.summary:
             summary = project.summary[:100] + ("..." if len(project.summary) > 100 else "")
-            lines.append(f"    {summary}")
-        
+            result.append(f"    {summary}")
         if project.outcomes:
-            lines.append(f"    📊 {project.outcomes}")
+            result.append(f"    📊 {project.outcomes}")
+        return result
     
-    return "\n".join(lines)
+    return "\n".join(line for project in projects for line in format_project(project))
 
 
 def extract_technologies(work: Work) -> list[str]:
@@ -148,13 +136,10 @@ def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
 """
     
     # Summary
-    summary_section = ""
-    if work.summary:
-        summary_section = f"\n📝 SUMMARY:\n{work.summary}\n"
+    summary_section = f"\n📝 SUMMARY:\n{work.summary}\n" if work.summary else ""
     
     # Bullets
     bullets_section = ""
-    has_bullets = work.mcp_details and len(work.mcp_details.bullets) > 0
     if work.mcp_details:
         bullet_count = len(work.mcp_details.bullets)
         bullets_section = f"\n💼 ACCOMPLISHMENTS ({bullet_count}):\n"
@@ -162,7 +147,6 @@ def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
     
     # Major Projects
     projects_section = ""
-    has_projects = work.mcp_details and len(work.mcp_details.major_projects) > 0
     if work.mcp_details:
         project_count = len(work.mcp_details.major_projects)
         projects_section = f"\n\n🚀 MAJOR PROJECTS ({project_count}):\n"
@@ -173,11 +157,11 @@ def format_work_result(work: Work, action: str, store: ExperienceStore) -> str:
     # =========================================================================
     
     # 1. Check for missing bullets (CRITICAL)
-    if not has_bullets:
+    if not (work.mcp_details and work.mcp_details.bullets):
         tracker.add_bullets_action(work_id, work_name)
     
     # 2. Check for missing major projects (CRITICAL)
-    if not has_projects:
+    if not (work.mcp_details and work.mcp_details.major_projects):
         tracker.add_major_project_action(work_id, work_name)
     
     # 3. Extract technologies and check for missing skills (HIGH)

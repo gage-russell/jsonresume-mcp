@@ -1,3 +1,4 @@
+import os
 from fastmcp import FastMCP
 
 from resumejson_mcp.mcp.setup.v1 import tools as setup_tools
@@ -6,9 +7,12 @@ from resumejson_mcp.mcp.experience.v1.projects import tools as project_tools
 from resumejson_mcp.mcp.experience.v1.education import tools as education_tools
 from resumejson_mcp.mcp.experience.v1.skills import tools as skill_tools
 from resumejson_mcp.mcp.experience.v1.basics import tools as basics_tools
+from resumejson_mcp.mcp.experience.v1.search import tools as search_tools
 from resumejson_mcp.mcp.templates.v1 import tools as template_tools
 from resumejson_mcp.mcp.applications.v1 import tools as application_tools
 from resumejson_mcp.mcp.workflow.v1 import tools as workflow_tools
+from resumejson_mcp.mcp.prompts.v1 import prompts as prompt_templates
+from resumejson_mcp.middleware import LoggingMiddleware, MetricsMiddleware
 
 
 mcp = FastMCP(
@@ -152,16 +156,45 @@ mcp = FastMCP(
     """,
 )
 
+# ============================================================================
+# MIDDLEWARE - Logging and metrics (enabled via environment variable)
+# ============================================================================
+# Set RESUMEJSON_MCP_LOGGING=1 to enable logging middleware
+# Set RESUMEJSON_MCP_METRICS=1 to enable metrics middleware
+# Both are disabled by default for performance
+
+_metrics_middleware = None  # Store reference for get_tool_metrics tool
+
+if os.environ.get("RESUMEJSON_MCP_LOGGING", "").lower() in ("1", "true", "yes"):
+    mcp.add_middleware(LoggingMiddleware(verbose=False))
+
+if os.environ.get("RESUMEJSON_MCP_METRICS", "").lower() in ("1", "true", "yes"):
+    _metrics_middleware = MetricsMiddleware()
+    mcp.add_middleware(_metrics_middleware)
+
+
+# ============================================================================
+# TOOLS REGISTRATION
+# ============================================================================
+
 # Setup tools
 mcp.add_prompt(setup_tools.setup_storage_prompt)
 mcp.add_tool(setup_tools.setup_storage)
 mcp.add_tool(setup_tools.initialize_experience)
 mcp.add_tool(setup_tools.check_setup_status)
+mcp.add_tool(setup_tools.get_experience_stats)
+mcp.add_tool(setup_tools.validate_experience)
+mcp.add_tool(setup_tools.validate_work_position)
+mcp.add_tool(setup_tools.list_backups)
+mcp.add_tool(setup_tools.restore_from_backup)
+mcp.add_tool(setup_tools.export_to_standard_json_resume)
 mcp.add_resource(setup_tools.get_storage_paths)
 
 # Basics tools
 mcp.add_tool(basics_tools.get_basics)
 mcp.add_tool(basics_tools.set_basics)
+mcp.add_tool(basics_tools.update_basics_field)
+mcp.add_tool(basics_tools.add_profile)
 
 # Work tools
 mcp.add_tool(work_tools.get_all_work)
@@ -170,6 +203,7 @@ mcp.add_tool(work_tools.add_work)
 mcp.add_tool(work_tools.update_work)
 mcp.add_tool(work_tools.delete_work)
 mcp.add_tool(work_tools.add_bullet_to_work)
+mcp.add_tool(work_tools.add_bullets_to_work)
 mcp.add_tool(work_tools.add_major_project_to_work)
 
 # Education tools
@@ -203,6 +237,8 @@ mcp.add_tool(template_tools.update_template)
 mcp.add_tool(template_tools.delete_template)
 mcp.add_tool(template_tools.render_resume)
 mcp.add_tool(template_tools.preview_render)
+mcp.add_tool(template_tools.validate_template)
+mcp.add_tool(template_tools.preview_template_with_sample_data)
 
 # Application tools (job application workflow)
 mcp.add_tool(application_tools.create_job_application)
@@ -214,12 +250,88 @@ mcp.add_tool(application_tools.list_applications)
 mcp.add_tool(application_tools.get_application)
 mcp.add_tool(application_tools.get_application_resume)
 mcp.add_tool(application_tools.delete_application)
+mcp.add_tool(application_tools.compare_resumes)
+mcp.add_tool(application_tools.generate_cover_letter_data)
+mcp.add_tool(application_tools.save_cover_letter)
+mcp.add_tool(application_tools.get_cover_letter)
 
 # Workflow tools (pending actions / todos)
 mcp.add_tool(workflow_tools.get_pending_todos)
 mcp.add_tool(workflow_tools.complete_todo)
 mcp.add_tool(workflow_tools.complete_todos_of_type)
 mcp.add_tool(workflow_tools.clear_completed_todos)
+mcp.add_tool(workflow_tools.add_custom_todo)
+mcp.add_tool(workflow_tools.get_pending_todos_for_work)
+mcp.add_tool(workflow_tools.analyze_job_description)
+
+# Search tools (experience data search and filtering)
+mcp.add_tool(search_tools.search_experience)
+mcp.add_tool(search_tools.filter_work_by_tags)
+
+
+# ============================================================================
+# METRICS TOOL (only if metrics middleware is enabled)
+# ============================================================================
+
+@mcp.tool(
+    name="get_tool_metrics",
+    description="Get usage metrics for all tools. Only available if RESUMEJSON_MCP_METRICS=1 is set."
+)
+def get_tool_metrics() -> str:
+    """Get tool usage metrics."""
+    if _metrics_middleware is None:
+        return """❌ Metrics middleware is not enabled.
+
+To enable metrics, set the environment variable:
+    RESUMEJSON_MCP_METRICS=1
+
+Then restart the MCP server."""
+    
+    return _metrics_middleware.get_summary()
+
+
+# ============================================================================
+# PROMPTS - Interactive workflow guides
+# ============================================================================
+
+@mcp.prompt(
+    name="gather_work_experience",
+    description="Interactive prompt for gathering detailed work experience. Use when helping a user add a new work position."
+)
+def gather_work_experience_prompt() -> str:
+    return prompt_templates.gather_work_experience_prompt()
+
+
+@mcp.prompt(
+    name="tailor_resume_for_job",
+    description="Guide for tailoring a resume for a specific job application. Walks through analyzing the JD, selecting experience, and creating an optimized resume."
+)
+def tailor_resume_for_job_prompt(job_description: str) -> str:
+    return prompt_templates.tailor_resume_for_job_prompt(job_description)
+
+
+@mcp.prompt(
+    name="quick_resume_update",
+    description="Quick workflow for updating an existing resume with new experience, accomplishments, or skills."
+)
+def quick_resume_update_prompt() -> str:
+    return prompt_templates.quick_resume_update_prompt()
+
+
+@mcp.prompt(
+    name="review_experience_quality",
+    description="Review and improve the quality of stored experience data. Audits data and identifies areas for improvement."
+)
+def review_experience_quality_prompt() -> str:
+    return prompt_templates.review_experience_quality_prompt()
+
+
+@mcp.prompt(
+    name="first_time_setup",
+    description="Guide for first-time users setting up ResumeJSON-MCP. Walks through initialization, adding contact info, and first work position."
+)
+def first_time_setup_prompt() -> str:
+    return prompt_templates.first_time_setup_prompt()
 
 
 if __name__ == "__main__":

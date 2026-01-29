@@ -5,11 +5,14 @@ from fastmcp.tools import tool
 from resumejson_mcp.lib.experience.experience_store import ExperienceStore
 from resumejson_mcp.lib.experience.models import Skill
 from resumejson_mcp.lib.pending_actions import get_tracker, ActionType
+from resumejson_mcp.mcp.tags import SKILLS_TAGS, CREATE, READ, UPDATE, DELETE, BULK
+from resumejson_mcp.mcp.experience.shared_helpers import handle_id_collision
 from .helpers import ensure_skill_ids, format_skill_result, format_bulk_skills_result
 
 
 @tool(
     name="get_all_skills",
+    tags=SKILLS_TAGS | {"read"},
     description="""Get all skills from the experience store.
 
 Returns a formatted list of all skill categories with their associated skills.
@@ -49,6 +52,7 @@ def get_all_skills() -> str:
 
 @tool(
     name="get_skill_by_id",
+    tags=SKILLS_TAGS | {"read"},
     description="""Get a specific skill category by its mcp-details.id.
 
 Use this to view full details of a skill category including:
@@ -75,6 +79,7 @@ Use get_all_skills to see available skill categories and their IDs."""
 
 @tool(
     name="add_skill",
+    tags=SKILLS_TAGS | {"create"},
     description="""Add a single skill category to the experience store.
 
 Use this when adding one skill category at a time, or when you need to capture
@@ -103,15 +108,7 @@ def add_skill(skill: Skill) -> str:
     store = ExperienceStore()
     
     # Check for ID collision
-    max_retries = 3
-    for _ in range(max_retries):
-        try:
-            existing = store.get_skill_by_id(skill.mcp_details.id)
-            # If we got here, ID exists - regenerate
-            ensure_skill_ids(skill)
-        except ValueError:
-            # ID doesn't exist - we're good
-            break
+    handle_id_collision(skill, store.get_skill_by_id, ensure_skill_ids)
     
     store.add_skill(skill)
     
@@ -120,6 +117,7 @@ def add_skill(skill: Skill) -> str:
 
 @tool(
     name="add_skills",
+    tags=SKILLS_TAGS | {"create", "bulk"},
     description="""Add multiple skill categories at once (bulk operation).
 
 This is the PREFERRED tool when initially capturing skills, as users typically
@@ -171,15 +169,7 @@ def add_skills(skills: list[Skill]) -> str:
     
     # Handle ID collisions
     for skill in skills:
-        max_retries = 3
-        for _ in range(max_retries):
-            try:
-                existing = store.get_skill_by_id(skill.mcp_details.id)
-                # If we got here, ID exists - regenerate
-                ensure_skill_ids(skill)
-            except ValueError:
-                # ID doesn't exist - we're good
-                break
+        handle_id_collision(skill, store.get_skill_by_id, ensure_skill_ids)
     
     store.add_skills(skills)
     
@@ -197,6 +187,7 @@ def add_skills(skills: list[Skill]) -> str:
 
 @tool(
     name="update_skill",
+    tags=SKILLS_TAGS | {"update"},
     description="""Update an existing skill category.
 
 Pass the complete Skill object with mcp_details.id matching the existing category.
@@ -234,6 +225,7 @@ Use get_all_skills to see available categories and their IDs."""
 
 @tool(
     name="delete_skill",
+    tags=SKILLS_TAGS | {"delete"},
     description="""Delete a skill category by its mcp-details.id.
 
 This permanently removes the category and all its associated skills.

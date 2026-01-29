@@ -24,13 +24,12 @@ def detect_missing_info(basics: Basics) -> list[str]:
     
     if not basics.location:
         missing.append("No location information")
-    elif basics.location:
-        if not basics.location.city:
-            missing.append("Location missing city")
-        if not basics.location.region:
-            missing.append("Location missing region/state")
+    elif not basics.location.city:
+        missing.append("Location missing city")
+    elif not basics.location.region:
+        missing.append("Location missing region/state")
     
-    if not basics.profiles or len(basics.profiles) == 0:
+    if not basics.profiles:
         missing.append("No social profiles (LinkedIn, GitHub, portfolio, etc.)")
     
     return missing
@@ -95,13 +94,11 @@ def format_basics_result(basics: Basics, action: str) -> str:
         missing_section += "\n\n⚠️  IMPORTANT: Ask targeted follow-up questions to complete this information.\n"
     
     # Next steps guidance
-    has_missing = len(missing) > 0
-    
     next_steps = f"\n🎯 NEXT STEPS:\n"
     next_steps += f"1. Show user the captured information above\n"
     next_steps += f"2. Ask: \"Does this contact information look correct?\"\n"
     
-    if has_missing:
+    if missing:
         next_steps += f"3. ⚠️  CRITICAL: This basics section is missing important information.\n"
         next_steps += f"   Ask specific follow-up questions to complete it.\n"
         next_steps += f"4. Update basics once you have more information\n"

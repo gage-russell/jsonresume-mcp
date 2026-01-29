@@ -11,7 +11,7 @@ from pathlib import Path
 
 from resumejson_mcp.lib.storage.models import StoragePaths
 from resumejson_mcp.lib.experience.models import Resume
-from resumejson_mcp.built_in_templates.templates_store import TemplatesStore
+from resumejson_mcp.templates.templates_store import TemplatesStore
 from .models import Application
 
 
@@ -178,10 +178,11 @@ class ApplicationStore:
         """
         folder = self._get_application_folder(application_id)
         
-        if folder.exists():
-            shutil.rmtree(folder)
-            return True
-        return False
+        if not folder.exists():
+            return False
+        
+        shutil.rmtree(folder)
+        return True
     
     # ========================================================================
     # Resume Operations

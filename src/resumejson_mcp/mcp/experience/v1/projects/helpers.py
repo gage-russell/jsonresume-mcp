@@ -1,16 +1,12 @@
 """Helper functions for project MCP tools."""
 
-from uuid import uuid4
-
 from resumejson_mcp.lib.experience.models import Project, MCPProjectDetails
+from resumejson_mcp.mcp.experience.shared_helpers import ensure_mcp_id
 
 
 def ensure_project_ids(project: Project) -> None:
     """Ensure project has all required IDs set."""
-    if not project.mcp_details:
-        project.mcp_details = MCPProjectDetails(id=str(uuid4()))
-    elif not project.mcp_details.id:
-        project.mcp_details.id = str(uuid4())
+    ensure_mcp_id(project, MCPProjectDetails)
 
 
 def detect_missing_info(project: Project) -> list[str]:
@@ -96,14 +92,12 @@ ID: {project.mcp_details.id if project.mcp_details else 'N/A'}
 """
     
     # Next steps guidance
-    has_missing = len(missing) > 0
-    
     next_steps = f"""\n🎯 NEXT STEPS (REQUIRED):
 1. Show user the captured information above
 2. Ask: "Does this look correct for your {project.name} project?"
 """
     
-    if has_missing:
+    if missing:
         next_steps += f"""3. ⚠️  CRITICAL: This project is missing important information.
    Ask specific follow-up questions to complete it.
 4. Update the project once you have more information
@@ -112,7 +106,7 @@ ID: {project.mcp_details.id if project.mcp_details else 'N/A'}
         next_steps += f"""3. ✓ This project looks complete!
 """
     
-    final_step = 5 if has_missing else 4
+    final_step = 5 if missing else 4
     next_steps += f"""{final_step}. Ask: "Would you like to add another project, or move on to work experience or skills?"
 
 💡 REMINDER: Top-level projects are portfolio/showcase projects that appear directly on resumes.

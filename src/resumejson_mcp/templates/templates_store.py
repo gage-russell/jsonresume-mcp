@@ -144,6 +144,20 @@ class TemplatesStore:
         
         return template.render(**data)
 
+    def render_template_from_dict(self, resume_data: dict, template_name: str | None = None) -> str:
+        """Render a template with resume data provided as a dictionary.
+        
+        Alias for render_template that makes the dict input explicit.
+        
+        Args:
+            resume_data: Dict with resume data
+            template_name: Name of the template file. If None, uses default template.
+            
+        Returns:
+            Rendered LaTeX document as string
+        """
+        return self.render_template(resume_data, template_name)
+
     def save_rendered_template(self, 
                               resume_data: Resume | dict, 
                               output_filename: str,
@@ -235,10 +249,11 @@ class TemplatesStore:
         
         template_path = self.storage_paths.templates_folder / template_name
         
-        if template_path.exists():
-            template_path.unlink()
-            return True
-        return False
+        if not template_path.exists():
+            return False
+        
+        template_path.unlink()
+        return True
 
     def read_template_content(self, template_name: str | None = None) -> str:
         """Read the raw content of a template file.
